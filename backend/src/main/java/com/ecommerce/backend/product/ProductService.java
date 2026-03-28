@@ -10,7 +10,9 @@ public class ProductService {
     @Autowired
     private ProductRepository productRepository;
 
+
     public Product addProduct(Product product) {
+        // Optionally validate category, color, brand, rating here
         return productRepository.save(product);
     }
 
@@ -22,7 +24,9 @@ public class ProductService {
         return productRepository.findByNameContainingIgnoreCase(keyword);
     }
 
+
     public Product updateProduct(Product product) {
+        // Optionally validate category, color, brand, rating here
         return productRepository.save(product);
     }
 
