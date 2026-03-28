@@ -1,0 +1,51 @@
+package com.ecommerce.backend.product;
+
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/products")
+@CrossOrigin(origins = "http://localhost:3000")
+public class ProductController {
+
+    private final ProductRepository productRepository;
+    @Autowired
+    private ProductService productService;
+
+    ProductController(ProductRepository productRepository) {
+        this.productRepository = productRepository;
+    }
+
+
+    @PostMapping
+    public Product addProduct(@RequestBody Product product) {
+        return productService.addProduct(product);
+    }
+
+    @PutMapping("/{id}")
+    public Product updateProduct(@PathVariable Long id, @RequestBody Product product) {
+        product.setId(id);
+        return productService.updateProduct(product);
+    }
+
+    @DeleteMapping("/{id}")
+    public void deleteProduct(@PathVariable Long id) {
+        productService.deleteProduct(id);
+    }
+
+    @GetMapping
+    public List<Product> getAllProducts() {
+        return productService.getAllProducts();
+    }
+
+    @GetMapping("/search")
+public List<Product> searchProducts(@RequestParam String keyword) {
+    return productService.searchProducts(keyword);
+}
+@GetMapping("/{id}")
+public Product getProductById(@PathVariable Long id) {
+    return productRepository.findById(id).orElse(null);
+}
+}
