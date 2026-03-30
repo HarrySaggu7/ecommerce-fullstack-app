@@ -30,6 +30,11 @@
 		<java.version>17</java.version>
 	</properties>
 	<dependencies>
+		<!-- JavaMail for sending order confirmation emails -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-mail</artifactId>
+		</dependency>
 		<!-- WebClient for PayPal REST API integration -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
