@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import PayPalButton from "./PayPalButton";
 
 // AdminProductManager component (must be top-level, not inside App)
 function AdminProductManager({ products, fetchProducts }) {
@@ -484,9 +485,39 @@ function App() {
             <h3 style={{ marginTop: "15px" }}>
               Total: ₹{totalPrice}
             </h3>
-            <button style={styles.checkoutBtn} onClick={handleCheckout}>
-              Checkout
-            </button>
+            {/* PayPal Payment Button */}
+            <div style={{ margin: "20px 0" }}>
+              <PayPalButton
+                total={totalPrice}
+                onSuccess={async (payment) => {
+                  // Place order after successful payment
+                  if (!user || !user.id) {
+                    alert("You must be logged in to place an order.");
+                    return;
+                  }
+                  const orderPayload = {
+                    user: { id: user.id },
+                    products: cart.map(({ id }) => ({ id })),
+                    total: totalPrice,
+                    status: "PAID",
+                    createdAt: new Date().toISOString(),
+                    paymentId: payment.id
+                  };
+                  const response = await fetch("http://localhost:8080/api/orders", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(orderPayload),
+                  });
+                  if (response.ok) {
+                    setOrderPlaced(true);
+                    setCart([]);
+                    fetchOrders();
+                  } else {
+                    alert("Order failed. Please try again.");
+                  }
+                }}
+              />
+            </div>
           </>
         )}
 
