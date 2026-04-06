@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from "react";
 import PayPalButton from "./PayPalButton";
+import ReviewPage from "./ReviewPage";
+import NewProductsPage from "./NewProductsPage";
+import TestimonialsPage from "./TestimonialsPage";
+import ContactUsPage from "./ContactUsPage";
 
-// AdminProductManager component (must be top-level, not inside App)
+// AdminProductManager component
 function AdminProductManager({ products, fetchProducts }) {
   const [editing, setEditing] = useState(null);
   const [categories, setCategories] = useState([]);
@@ -144,7 +148,9 @@ function AdminProductManager({ products, fetchProducts }) {
 }
 
 function App() {
+
   const [user, setUser] = useState(null);
+  const [page, setPage] = useState("home");
   const [products, setProducts] = useState([]);
   const [search, setSearch] = useState("");
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -356,60 +362,19 @@ function App() {
       <div style={authStyles.container}>
         <div style={authStyles.card}>
           <h2 style={{ marginBottom: "20px" }}>Welcome Back</h2>
-
-          <input
-            style={authStyles.input}
-            placeholder="Email"
-            onChange={(e) => setEmail(e.target.value)}
-          />
-
-          <input
-            style={authStyles.input}
-            type="password"
-            placeholder="Password"
-            onChange={(e) => setPassword(e.target.value)}
-          />
-
-          <button style={authStyles.loginBtn} onClick={handleLogin}>
-            Login
-          </button>
-
+          <input style={authStyles.input} placeholder="Email" onChange={(e) => setEmail(e.target.value)} />
+          <input style={authStyles.input} type="password" placeholder="Password" onChange={(e) => setPassword(e.target.value)} />
+          <button style={authStyles.loginBtn} onClick={handleLogin}>Login</button>
           <div style={authStyles.divider}></div>
-
           <h3>Create Account</h3>
-
-          <input
-            style={authStyles.input}
-            placeholder="Name"
-            onChange={(e) => setName(e.target.value)}
-          />
-
-          <input
-            style={authStyles.input}
-            placeholder="Email"
-            onChange={(e) => setEmail(e.target.value)}
-          />
-
-          <input
-            style={authStyles.input}
-            type="password"
-            placeholder="Password"
-            onChange={(e) => setPassword(e.target.value)}
-          />
-
-          <button style={authStyles.registerBtn} onClick={handleRegister}>
-            Register
-          </button>
-
+          <input style={authStyles.input} placeholder="Name" onChange={(e) => setName(e.target.value)} />
+          <input style={authStyles.input} placeholder="Email" onChange={(e) => setEmail(e.target.value)} />
+          <input style={authStyles.input} type="password" placeholder="Password" onChange={(e) => setPassword(e.target.value)} />
+          <button style={authStyles.registerBtn} onClick={handleRegister}>Register</button>
           <div style={{ margin: "20px 0 0 0", textAlign: "center" }}>
             <span style={{ color: "#888" }}>or</span>
             <br />
-            <button
-              style={{ ...authStyles.loginBtn, background: "#6c757d", marginTop: 10 }}
-              onClick={() => setUser({ name: "Guest", guest: true })}
-            >
-              Continue as Guest
-            </button>
+            <button style={{ ...authStyles.loginBtn, background: "#6c757d", marginTop: 10 }} onClick={() => setUser({ name: "Guest", guest: true })}>Continue as Guest</button>
           </div>
         </div>
       </div>
@@ -419,8 +384,25 @@ function App() {
   // ---------------- MAIN APP UI ----------------
   return (
     <div style={styles.container}>
-      {/* Search & Filters - Professional Layout */}
-      <div style={{ display: "flex", gap: 24, marginBottom: 24, flexWrap: "wrap", alignItems: "flex-end" }}>
+      <nav style={{ marginBottom: 20, display: 'flex', gap: 8, alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={() => setPage("home")}>Home</button>
+          <button onClick={() => setPage("new")}>New Products</button>
+          <button onClick={() => setPage("reviews")}>Reviews</button>
+          <button onClick={() => setPage("testimonials")}>Testimonials</button>
+          <button onClick={() => setPage("contact")}>Contact Us</button>
+        </div>
+        <div style={{ flex: 1 }} />
+        <button style={styles.logoutBtn} onClick={handleLogout}>Logout</button>
+      </nav>
+      {page === "new" && <NewProductsPage />}
+      {page === "reviews" && <ReviewPage />}
+      {page === "testimonials" && <TestimonialsPage />}
+      {page === "contact" && <ContactUsPage user={user} />}
+      {page === "home" && (
+        <>
+          {/* Search & Filters - Professional Layout */}
+          <div style={{ display: "flex", gap: 24, marginBottom: 24, flexWrap: "wrap", alignItems: "flex-end" }}>
             <div style={{ flex: 1, minWidth: 220 }}>
               <label style={{ fontWeight: 600 }}>Search</label>
               <input
@@ -676,6 +658,8 @@ function App() {
             ))
           )}
         </div>
+      )}
+      </> 
       )}
     </div>
   );
