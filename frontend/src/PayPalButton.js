@@ -7,6 +7,8 @@ const PayPalButton = ({ total, onSuccess }) => {
     const PAYPAL_SCRIPT_ID = "paypal-sdk";
     const renderPayPalButtons = () => {
       if (window.paypal && paypalRef.current) {
+        // Clear the container before rendering to avoid stacking multiple buttons
+        paypalRef.current.innerHTML = "";
         window.paypal.Buttons({
           createOrder: async (data, actions) => {
             // Call backend to create PayPal payment
@@ -41,14 +43,12 @@ const PayPalButton = ({ total, onSuccess }) => {
       script.src = "https://www.paypal.com/sdk/js?client-id=ARWeIkgt5CCPWsM0g1eq4w6Tulgg581hSgUbIlqD2qrQqQBeZ2L6zr1vXc0VFmYEZs94XSNNfCC6v4n_&currency=USD";
       script.addEventListener("load", renderPayPalButtons);
       document.body.appendChild(script);
-      return () => {
-        if (document.getElementById(PAYPAL_SCRIPT_ID)) {
-          document.body.removeChild(script);
-        }
-      };
     } else {
       renderPayPalButtons();
     }
+    // Do not remove the script on unmount to avoid SDK reload issues
+    // eslint-disable-next-line
+    return undefined;
     // eslint-disable-next-line
   }, [total, onSuccess]);
 

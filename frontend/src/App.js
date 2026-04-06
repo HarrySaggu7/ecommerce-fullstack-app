@@ -185,6 +185,7 @@ function App() {
     }
     try {
       const response = await fetch(url);
+      console.log('Fetch URL:', url, 'Status:', response.status);
       if (!response.ok) throw new Error("Failed to fetch products");
       const data = await response.json();
       setProducts(Array.isArray(data) ? data : []);
@@ -614,6 +615,7 @@ function App() {
             {/* PayPal Payment Button */}
             <div style={{ margin: "20px 0" }}>
               <PayPalButton
+                key={totalPrice} // Only remount when total changes
                 total={totalPrice}
                 onSuccess={async (payment) => {
                   // Place order after successful payment
