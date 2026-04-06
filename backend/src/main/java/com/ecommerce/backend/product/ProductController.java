@@ -43,9 +43,19 @@ public class ProductController {
     }
 
     @GetMapping("/search")
-public List<Product> searchProducts(@RequestParam String keyword) {
-    return productService.searchProducts(keyword);
-}
+    public List<Product> searchProducts(@RequestParam String keyword) {
+        return productService.searchProducts(keyword);
+    }
+
+    @GetMapping("/filter")
+    public List<Product> filterProducts(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String color,
+            @RequestParam(required = false) String brand,
+            @RequestParam(required = false) Integer rating) {
+        System.out.println("[DEBUG] /filter called with: keyword='" + keyword + "', color='" + color + "', brand='" + brand + "', rating=" + rating);
+        return productService.filterProducts(keyword, color, brand, rating);
+    }
 @GetMapping("/{id}")
 public Product getProductById(@PathVariable Long id) {
     return productRepository.findById(id).orElse(null);

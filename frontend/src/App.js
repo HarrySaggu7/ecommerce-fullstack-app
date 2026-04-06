@@ -137,15 +137,30 @@ function App() {
   const [orders, setOrders] = useState([]);
 
   // Filter states
-  const [minPrice, setMinPrice] = useState("");
-  const [maxPrice, setMaxPrice] = useState("");
-  const [inStockOnly, setInStockOnly] = useState(false);
-  const [onSaleOnly, setOnSaleOnly] = useState(false);
+  const [filterColor, setFilterColor] = useState("");
+  const [filterBrand, setFilterBrand] = useState("");
+  const [filterRating, setFilterRating] = useState("");
 
-  const fetchProducts = async (keyword = "") => {
-    let url = "http://localhost:8080/api/products";
-    if (keyword) {
-      url = `http://localhost:8080/api/products/search?keyword=${keyword}`;
+  // Unified fetchProducts: always uses all filters and search
+  const fetchProducts = async (paramsOverride = {}) => {
+    const params = {
+      keyword: search,
+      color: filterColor,
+      brand: filterBrand,
+      rating: filterRating,
+      ...paramsOverride
+    };
+    const hasAny = Object.values(params).some(v => v && v !== "");
+    let url;
+    if (!hasAny) {
+      url = "http://localhost:8080/api/products";
+    } else {
+      url = "http://localhost:8080/api/products/filter?";
+      const query = Object.entries(params)
+        .filter(([_, v]) => v && v !== "")
+        .map(([k, v]) => `${k}=${encodeURIComponent(v)}`)
+        .join("&");
+      url += query;
     }
     const response = await fetch(url);
     const data = await response.json();
@@ -162,7 +177,8 @@ function App() {
   useEffect(() => {
     fetchProducts();
     if (user && user.id) fetchOrders();
-  }, []);
+    // eslint-disable-next-line
+  }, [search, filterColor, filterBrand, filterRating]);
 
   const handleRegister = async () => {
     const response = await fetch("http://localhost:8080/api/users/register", {
@@ -368,16 +384,65 @@ function App() {
         </div>
       )}
 
-      {/* Search */}
-      <input
-        style={styles.search}
-        placeholder="Search products..."
-        value={search}
-        onChange={(e) => {
-          setSearch(e.target.value);
-          fetchProducts(e.target.value);
-        }}
-      />
+
+      {/* Search & Filters - Professional Layout */}
+      <div style={{ display: "flex", gap: 24, marginBottom: 24, flexWrap: "wrap", alignItems: "flex-end" }}>
+        <div style={{ flex: 1, minWidth: 220 }}>
+          <label style={{ fontWeight: 600 }}>Search</label>
+          <input
+            style={styles.search}
+            placeholder="Search products..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+        </div>
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+          <div>
+            <label style={{ fontWeight: 600 }}>Color</label>
+            <input
+              style={styles.search}
+              placeholder="Color"
+              value={filterColor}
+              onChange={e => setFilterColor(e.target.value)}
+            />
+          </div>
+          <div>
+            <label style={{ fontWeight: 600 }}>Brand</label>
+            <input
+              style={styles.search}
+              placeholder="Brand"
+              value={filterBrand}
+              onChange={e => setFilterBrand(e.target.value)}
+            />
+          </div>
+          <div>
+            <label style={{ fontWeight: 600 }}>Rating</label>
+            <select
+              style={styles.search}
+              value={filterRating}
+              onChange={e => setFilterRating(e.target.value)}
+            >
+              <option value="">All</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+            </select>
+          </div>
+        </div>
+        <button
+          style={{ height: 40, alignSelf: "center" }}
+          onClick={() => {
+            setFilterColor("");
+            setFilterBrand("");
+            setFilterRating("");
+            setSearch("");
+          }}
+        >
+          Clear All
+        </button>
+      </div>
 
       {/* Product Grid */}
       <div style={styles.productGrid}>
