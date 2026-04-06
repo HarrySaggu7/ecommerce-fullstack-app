@@ -9,9 +9,18 @@ function AdminProductManager({ products, fetchProducts }) {
 
   useEffect(() => {
     // Fetch categories for dropdown
-    fetch("http://localhost:8080/api/categories")
-      .then((res) => res.json())
-      .then((data) => setCategories(Array.isArray(data) ? data : []));
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch("http://localhost:8080/api/categories");
+        if (!res.ok) throw new Error("Failed to fetch categories");
+        const data = await res.json();
+        setCategories(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error("Error fetching categories:", err);
+        setCategories([]);
+      }
+    };
+    fetchCategories();
   }, []);
 
   // Add or update product
@@ -21,21 +30,26 @@ function AdminProductManager({ products, fetchProducts }) {
     const url = editing
       ? `http://localhost:8080/api/products/${editing}`
       : "http://localhost:8080/api/products";
-    await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: form.name,
-        description: form.description,
-        price: parseFloat(form.price),
-        discount: form.discount ? parseFloat(form.discount) : 0,
-        stock: form.stock ? parseInt(form.stock) : 0,
-        category: form.category ? { id: form.category } : null,
-        color: form.color,
-        brand: form.brand,
-        rating: form.rating ? parseInt(form.rating) : null,
-      }),
-    });
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: form.name,
+          description: form.description,
+          price: parseFloat(form.price),
+          discount: form.discount ? parseFloat(form.discount) : 0,
+          stock: form.stock ? parseInt(form.stock) : 0,
+          category: form.category ? { id: form.category } : null,
+          color: form.color,
+          brand: form.brand,
+          rating: form.rating ? parseInt(form.rating) : null,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to save product");
+    } catch (err) {
+      console.error("Error saving product:", err);
+    }
     setForm({ name: "", description: "", price: "", discount: "", stock: "", category: "", color: "", brand: "", rating: "" });
     setEditing(null);
     fetchProducts();
@@ -59,7 +73,12 @@ function AdminProductManager({ products, fetchProducts }) {
 
   // Delete product
   const handleDelete = async (id) => {
-    await fetch(`http://localhost:8080/api/products/${id}`, { method: "DELETE" });
+    try {
+      const res = await fetch(`http://localhost:8080/api/products/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete product");
+    } catch (err) {
+      console.error("Error deleting product:", err);
+    }
     fetchProducts();
   };
 
@@ -139,7 +158,9 @@ function App() {
   // Filter states
   const [filterColor, setFilterColor] = useState("");
   const [filterBrand, setFilterBrand] = useState("");
+  const [brandOptions, setBrandOptions] = useState([]);
   const [filterRating, setFilterRating] = useState("");
+  const [colorOptions, setColorOptions] = useState([]);
 
   // Unified fetchProducts: always uses all filters and search
   const fetchProducts = async (paramsOverride = {}) => {
@@ -162,16 +183,28 @@ function App() {
         .join("&");
       url += query;
     }
-    const response = await fetch(url);
-    const data = await response.json();
-    setProducts(Array.isArray(data) ? data : []);
+    try {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("Failed to fetch products");
+      const data = await response.json();
+      setProducts(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Error fetching products:", err);
+      setProducts([]);
+    }
   };
 
   const fetchOrders = async () => {
     if (!user || !user.id) return;
-    const response = await fetch(`http://localhost:8080/api/orders/user/${user.id}`);
-    const data = await response.json();
-    setOrders(Array.isArray(data) ? data : []);
+    try {
+      const response = await fetch(`http://localhost:8080/api/orders/user/${user.id}`);
+      if (!response.ok) throw new Error("Failed to fetch orders");
+      const data = await response.json();
+      setOrders(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Error fetching orders:", err);
+      setOrders([]);
+    }
   };
 
   useEffect(() => {
@@ -180,28 +213,44 @@ function App() {
     // eslint-disable-next-line
   }, [search, filterColor, filterBrand, filterRating]);
 
+  // Update color and brand options whenever products change
+  useEffect(() => {
+    const uniqueColors = Array.from(new Set(products.map(p => p.color).filter(Boolean)));
+    setColorOptions(uniqueColors);
+    const uniqueBrands = Array.from(new Set(products.map(p => p.brand).filter(Boolean)));
+    setBrandOptions(uniqueBrands);
+  }, [products]);
+
   const handleRegister = async () => {
-    const response = await fetch("http://localhost:8080/api/users/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password }),
-    });
-
-    const data = await response.json();
-    alert("Registered successfully!");
-
+    try {
+      const response = await fetch("http://localhost:8080/api/users/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password }),
+      });
+      if (!response.ok) throw new Error("Registration failed");
+      await response.json();
+      alert("Registered successfully!");
+    } catch (err) {
+      console.error("Error registering:", err);
+      alert("Registration failed. Please try again.");
+    }
   };
 
   const handleLogin = async () => {
-    const response = await fetch("http://localhost:8080/api/users/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
-
-    const data = await response.json();
-    setUser(data);
-
+    try {
+      const response = await fetch("http://localhost:8080/api/users/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      if (!response.ok) throw new Error("Login failed");
+      const data = await response.json();
+      setUser(data);
+    } catch (err) {
+      console.error("Error logging in:", err);
+      alert("Login failed. Please try again.");
+    }
   };
 
   const handleLogout = () => {
@@ -211,9 +260,15 @@ function App() {
   };
 
   const handleProductClick = async (id) => {
-    const response = await fetch(`http://localhost:8080/api/products/${id}`);
-    const data = await response.json();
-    setSelectedProduct(data);
+    try {
+      const response = await fetch(`http://localhost:8080/api/products/${id}`);
+      if (!response.ok) throw new Error("Failed to fetch product details");
+      const data = await response.json();
+      setSelectedProduct(data);
+    } catch (err) {
+      console.error("Error fetching product details:", err);
+      setSelectedProduct(null);
+    }
   };
 
   const addToCart = (product) => {
@@ -275,16 +330,21 @@ function App() {
       status: "PLACED",
       createdAt: new Date().toISOString(),
     };
-    const response = await fetch("http://localhost:8080/api/orders", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(orderPayload),
-    });
-    if (response.ok) {
-      setOrderPlaced(true);
-      setCart([]);
-      fetchOrders();
-    } else {
+    try {
+      const response = await fetch("http://localhost:8080/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(orderPayload),
+      });
+      if (response.ok) {
+        setOrderPlaced(true);
+        setCart([]);
+        fetchOrders();
+      } else {
+        alert("Order failed. Please try again.");
+      }
+    } catch (err) {
+      console.error("Error placing order:", err);
       alert("Order failed. Please try again.");
     }
   };
@@ -358,97 +418,82 @@ function App() {
   // ---------------- MAIN APP UI ----------------
   return (
     <div style={styles.container}>
-      {/* Header */}
-      <div style={styles.header}>
-        <h2 style={{ margin: 0 }}>🛍 My Store</h2>
-        <div>
-          <span style={{ marginRight: "15px" }}>
-            Hi, {user.guest ? "Guest" : user.name}
-          </span>
-          {!user.guest && (
-            <button style={styles.logoutBtn} onClick={handleLogout}>
-              Logout
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Admin Panel */}
-      {user.role === "ADMIN" && (
-        <div style={styles.adminPanel}>
-          <h3>Admin Panel</h3>
-          <AdminProductManager
-            products={products}
-            fetchProducts={fetchProducts}
-          />
-        </div>
-      )}
-
-
       {/* Search & Filters - Professional Layout */}
       <div style={{ display: "flex", gap: 24, marginBottom: 24, flexWrap: "wrap", alignItems: "flex-end" }}>
-        <div style={{ flex: 1, minWidth: 220 }}>
-          <label style={{ fontWeight: 600 }}>Search</label>
-          <input
-            style={styles.search}
-            placeholder="Search products..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
-        </div>
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-          <div>
-            <label style={{ fontWeight: 600 }}>Color</label>
-            <input
-              style={styles.search}
-              placeholder="Color"
-              value={filterColor}
-              onChange={e => setFilterColor(e.target.value)}
-            />
-          </div>
-          <div>
-            <label style={{ fontWeight: 600 }}>Brand</label>
-            <input
-              style={styles.search}
-              placeholder="Brand"
-              value={filterBrand}
-              onChange={e => setFilterBrand(e.target.value)}
-            />
-          </div>
-          <div>
-            <label style={{ fontWeight: 600 }}>Rating</label>
-            <select
-              style={styles.search}
-              value={filterRating}
-              onChange={e => setFilterRating(e.target.value)}
+            <div style={{ flex: 1, minWidth: 220 }}>
+              <label style={{ fontWeight: 600 }}>Search</label>
+              <input
+                style={styles.search}
+                placeholder="Search products..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+              />
+            </div>
+            {/* Wrap filter controls in a fragment to avoid adjacent JSX error */}
+            <>
+              <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                <div>
+                  <label style={{ fontWeight: 600 }}>Color</label>
+                  <select
+                    style={styles.search}
+                    value={filterColor}
+                    onChange={e => setFilterColor(e.target.value)}
+                  >
+                    <option value="">All</option>
+                    {colorOptions.map((color) => (
+                      <option key={color} value={color}>{color}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontWeight: 600 }}>Brand</label>
+                  <select
+                    style={styles.search}
+                    value={filterBrand}
+                    onChange={e => setFilterBrand(e.target.value)}
+                  >
+                    <option value="">All</option>
+                    {brandOptions.map((brand) => (
+                      <option key={brand} value={brand}>{brand}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontWeight: 600 }}>Rating</label>
+                  <select
+                    style={styles.search}
+                    value={filterRating}
+                    onChange={e => setFilterRating(e.target.value)}
+                  >
+                    <option value="">All</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                  </select>
+                </div>
+              </div>
+            </>
+            <button
+              style={{ height: 40, alignSelf: "center" }}
+              onClick={() => {
+                setFilterColor("");
+                setFilterBrand("");
+                setFilterRating("");
+                setSearch("");
+              }}
             >
-              <option value="">All</option>
-              <option value="1">1</option>
-              <option value="2">2</option>
-              <option value="3">3</option>
-              <option value="4">4</option>
-              <option value="5">5</option>
-            </select>
+              Clear All
+            </button>
           </div>
-        </div>
-        <button
-          style={{ height: 40, alignSelf: "center" }}
-          onClick={() => {
-            setFilterColor("");
-            setFilterBrand("");
-            setFilterRating("");
-            setSearch("");
-          }}
-        >
-          Clear All
-        </button>
-      </div>
 
       {/* Product Grid */}
       <div style={styles.productGrid}>
-        {products.map((product) => {
+        {Array.isArray(products) && products.map((product) => {
+          if (!product || typeof product !== 'object' || !product.id) return null;
           const hasDiscount = product.discount && product.discount > 0;
-          const discountedPrice = hasDiscount
+          const discountedPrice = hasDiscount && product.price
             ? (product.price * (1 - product.discount / 100)).toFixed(2)
             : product.price;
           return (
@@ -457,8 +502,13 @@ function App() {
               style={styles.card}
               onClick={() => handleProductClick(product.id)}
             >
-              <h4>{product.name}</h4>
-              {hasDiscount ? (
+              <h4>{product.name || 'No Name'}</h4>
+              {product.color && (
+                <div style={{ marginBottom: 4, color: '#555', fontSize: 14 }}>
+                  <strong>Color:</strong> {product.color}
+                </div>
+              )}
+              {hasDiscount && product.price ? (
                 <>
                   <span style={{ color: "#d9534f", fontWeight: "bold", marginRight: 8 }}>Sale</span>
                   <p style={{ fontWeight: "bold", color: "#d9534f", margin: 0 }}>
@@ -466,43 +516,52 @@ function App() {
                   </p>
                 </>
               ) : (
-                <p style={{ fontWeight: "bold" }}>₹{product.price}</p>
+                product.price && <p style={{ fontWeight: "bold" }}>₹{product.price}</p>
               )}
-              <p style={{ margin: 0, color: product.stock > 0 ? "green" : "red", fontWeight: "bold" }}>
-                {product.stock > 0 ? `In Stock (${product.stock})` : "Out of Stock"}
-              </p>
+              {typeof product.stock === 'number' && (
+                <p style={{ margin: 0, color: product.stock > 0 ? "green" : "red", fontWeight: "bold" }}>
+                  {product.stock > 0 ? `In Stock (${product.stock})` : "Out of Stock"}
+                </p>
+              )}
             </div>
           );
         })}
       </div>
 
-      {/* Product Details */}
-      {selectedProduct && (
+      {/* Product Details (moved below product grid) */}
+      {selectedProduct && typeof selectedProduct === 'object' && selectedProduct.id && (
         <div style={styles.detailsCard}>
-          <h2>{selectedProduct.name}</h2>
-          {selectedProduct.discount && selectedProduct.discount > 0 ? (
-            <>
-              <span style={{ color: "#d9534f", fontWeight: "bold", marginRight: 8 }}>Sale</span>
-              <p>
-                <strong>Price:</strong> <span style={{ color: "#d9534f", fontWeight: "bold" }}>₹{(selectedProduct.price * (1 - selectedProduct.discount / 100)).toFixed(2)}</span>
-                <span style={{ textDecoration: "line-through", color: "#888", fontWeight: "normal", fontSize: 16, marginLeft: 8 }}>₹{selectedProduct.price}</span>
-              </p>
-            </>
-          ) : (
-            <p><strong>Price:</strong> ₹{selectedProduct.price}</p>
+          <h2>{selectedProduct.name || 'No Name'}</h2>
+          {selectedProduct.discount && selectedProduct.discount > 0 && (
+            <span style={{ color: "#d9534f", fontWeight: "bold", marginRight: 8 }}>Sale</span>
           )}
-          <p><strong>Description:</strong> {selectedProduct.description}</p>
-          <p>
-            <strong>Status:</strong>{" "}
-            <span
-              style={{
-                color: selectedProduct.stock > 0 ? "green" : "red",
-                fontWeight: "bold",
-              }}
-            >
-              {selectedProduct.stock > 0 ? "In Stock" : "Out of Stock"}
-            </span>
-          </p>
+          {selectedProduct.color && (
+            <div style={{ marginBottom: 4, color: '#555', fontSize: 15 }}>
+              <strong>Color:</strong> {selectedProduct.color}
+            </div>
+          )}
+          {selectedProduct.discount && selectedProduct.discount > 0 && selectedProduct.price ? (
+            <p>
+              <strong>Price:</strong> <span style={{ color: "#d9534f", fontWeight: "bold" }}>₹{((selectedProduct.price * (1 - selectedProduct.discount / 100))).toFixed(2)}</span>
+              <span style={{ textDecoration: "line-through", color: "#888", fontWeight: "normal", fontSize: 16, marginLeft: 8 }}>₹{selectedProduct.price}</span>
+            </p>
+          ) : (
+            selectedProduct.price && <p><strong>Price:</strong> ₹{selectedProduct.price}</p>
+          )}
+          {selectedProduct.description && <p><strong>Description:</strong> {selectedProduct.description}</p>}
+          {typeof selectedProduct.stock === 'number' && (
+            <p>
+              <strong>Status:</strong>{" "}
+              <span
+                style={{
+                  color: selectedProduct.stock > 0 ? "green" : "red",
+                  fontWeight: "bold",
+                }}
+              >
+                {selectedProduct.stock > 0 ? "In Stock" : "Out of Stock"}
+              </span>
+            </p>
+          )}
 
           <button
             style={{
@@ -517,6 +576,8 @@ function App() {
           </button>
         </div>
       )}
+
+      {/* Product Details (duplicate removed) */}
 
       {/* Cart Section */}
       <div style={styles.cartBox}>
