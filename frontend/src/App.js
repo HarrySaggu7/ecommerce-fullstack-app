@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import PayPalButton from "./PayPalButton";
 import ReviewPage from "./ReviewPage";
-import NewProductsPage from "./NewProductsPage";
+// import NewProductsPage from "./NewProductsPage";
 import TestimonialsPage from "./TestimonialsPage";
 import ContactUsPage from "./ContactUsPage";
 // ...existing code...
@@ -210,6 +210,9 @@ function AdminProductManager({ products, fetchProducts }) {
 }
 
 function App() {
+  // Sorting state
+  const [sortBy, setSortBy] = useState("");
+  const [sortOrder, setSortOrder] = useState("asc"); // asc or desc
 
   const [user, setUser] = useState(() => {
     // Initialize user from localStorage if present
@@ -478,7 +481,7 @@ function App() {
       <nav style={{ marginBottom: 20, display: 'flex', gap: 8, alignItems: 'center' }}>
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={() => setPage("home")}>Home</button>
-          <button onClick={() => setPage("new")}>New Products</button>
+          {/* <button onClick={() => setPage("new")}>New Products</button> */}
           <button onClick={() => setPage("reviews")}>Reviews</button>
           <button onClick={() => setPage("testimonials")}>Testimonials</button>
           <button onClick={() => setPage("contact")}>Contact Us</button>
@@ -492,7 +495,7 @@ function App() {
             {page === "admin" && user && user.isAdmin && (
               <AdminProductManager products={products} fetchProducts={fetchProducts} />
             )}
-      {page === "new" && <NewProductsPage />}
+      {/* {page === "new" && <NewProductsPage />} */}
       {page === "reviews" && <ReviewPage />}
       {page === "testimonials" && <TestimonialsPage />}
       {page === "contact" && <ContactUsPage user={user} />}
@@ -563,59 +566,108 @@ function App() {
           </div>
 
       {/* Product Grid */}
+      {/* Sorting Controls */}
+      <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginBottom: 16 }}>
+        <label style={{ fontWeight: 600 }}>Sort By:</label>
+        <select value={sortBy} onChange={e => setSortBy(e.target.value)} style={styles.search}>
+          <option value="">None</option>
+          <option value="availability">Availability</option>
+          <option value="price">Price</option>
+          <option value="rating">Rating</option>
+          <option value="color">Color</option>
+          <option value="brand">Brand</option>
+        </select>
+        <select value={sortOrder} onChange={e => setSortOrder(e.target.value)} style={styles.search}>
+          <option value="asc">Ascending</option>
+          <option value="desc">Descending</option>
+        </select>
+      </div>
+
       <div style={styles.productGrid}>
-        {Array.isArray(products) && products.map((product) => {
-          if (!product || typeof product !== 'object' || !product.id) return null;
-          const hasDiscount = product.discount && product.discount > 0;
-          const discountedPrice = hasDiscount && product.price
-            ? (product.price * (1 - product.discount / 100)).toFixed(2)
-            : product.price;
-          return (
-            <div
-              key={product.id}
-              style={styles.card}
-              onClick={() => handleProductClick(product.id)}
-            >
-              {product.imageUrl && (
-                <img src={getImageUrl(product.imageUrl)} alt={product.name} style={{ width: '100%', maxHeight: 140, objectFit: 'contain', borderRadius: 6, marginBottom: 8, background: '#f8f8f8' }} />
-              )}
-              <h4 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                {product.name || 'No Name'}
-                {product.isNew && (
-                  <span style={{
-                    background: '#28a745',
-                    color: 'white',
-                    fontSize: '0.75em',
-                    fontWeight: 'bold',
-                    borderRadius: 4,
-                    padding: '2px 6px',
-                    marginLeft: 4
-                  }}>NEW</span>
+        {Array.isArray(products) && [...products]
+          .sort((a, b) => {
+            if (!sortBy) return 0;
+            let valA, valB;
+            switch (sortBy) {
+              case "availability":
+                valA = a.stock > 0 ? 1 : 0;
+                valB = b.stock > 0 ? 1 : 0;
+                break;
+              case "price":
+                valA = a.price || 0;
+                valB = b.price || 0;
+                break;
+              case "rating":
+                valA = a.rating || 0;
+                valB = b.rating || 0;
+                break;
+              case "color":
+                valA = a.color ? a.color.toLowerCase() : "";
+                valB = b.color ? b.color.toLowerCase() : "";
+                break;
+              case "brand":
+                valA = a.brand ? a.brand.toLowerCase() : "";
+                valB = b.brand ? b.brand.toLowerCase() : "";
+                break;
+              default:
+                return 0;
+            }
+            if (valA < valB) return sortOrder === "asc" ? -1 : 1;
+            if (valA > valB) return sortOrder === "asc" ? 1 : -1;
+            return 0;
+          })
+          .map((product) => {
+            if (!product || typeof product !== 'object' || !product.id) return null;
+            const hasDiscount = product.discount && product.discount > 0;
+            const discountedPrice = hasDiscount && product.price
+              ? (product.price * (1 - product.discount / 100)).toFixed(2)
+              : product.price;
+            return (
+              <div
+                key={product.id}
+                style={styles.card}
+                onClick={() => handleProductClick(product.id)}
+              >
+                {product.imageUrl && (
+                  <img src={getImageUrl(product.imageUrl)} alt={product.name} style={{ width: '100%', maxHeight: 140, objectFit: 'contain', borderRadius: 6, marginBottom: 8, background: '#f8f8f8' }} />
                 )}
-              </h4>
-              {product.color && (
-                <div style={{ marginBottom: 4, color: '#555', fontSize: 14 }}>
-                  <strong>Color:</strong> {product.color}
-                </div>
-              )}
-              {hasDiscount && product.price ? (
-                <>
-                  <span style={{ color: "#d9534f", fontWeight: "bold", marginRight: 8 }}>Sale</span>
-                  <p style={{ fontWeight: "bold", color: "#d9534f", margin: 0 }}>
-                    ₹{discountedPrice} <span style={{ textDecoration: "line-through", color: "#888", fontWeight: "normal", fontSize: 14 }}>₹{product.price}</span>
+                <h4 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  {product.name || 'No Name'}
+                  {product.isNew && (
+                    <span style={{
+                      background: '#28a745',
+                      color: 'white',
+                      fontSize: '0.75em',
+                      fontWeight: 'bold',
+                      borderRadius: 4,
+                      padding: '2px 6px',
+                      marginLeft: 4
+                    }}>NEW</span>
+                  )}
+                </h4>
+                {product.color && (
+                  <div style={{ marginBottom: 4, color: '#555', fontSize: 14 }}>
+                    <strong>Color:</strong> {product.color}
+                  </div>
+                )}
+                {hasDiscount && product.price ? (
+                  <>
+                    <span style={{ color: "#d9534f", fontWeight: "bold", marginRight: 8 }}>Sale</span>
+                    <p style={{ fontWeight: "bold", color: "#d9534f", margin: 0 }}>
+                      ₹{discountedPrice} <span style={{ textDecoration: "line-through", color: "#888", fontWeight: "normal", fontSize: 14 }}>₹{product.price}</span>
+                    </p>
+                  </>
+                ) : (
+                  product.price && <p style={{ fontWeight: "bold" }}>₹{product.price}</p>
+                )}
+                {typeof product.stock === 'number' && (
+                  <p style={{ margin: 0, color: product.stock > 0 ? "green" : "red", fontWeight: "bold" }}>
+                    {product.stock > 0 ? `In Stock (${product.stock})` : "Out of Stock"}
                   </p>
-                </>
-              ) : (
-                product.price && <p style={{ fontWeight: "bold" }}>₹{product.price}</p>
-              )}
-              {typeof product.stock === 'number' && (
-                <p style={{ margin: 0, color: product.stock > 0 ? "green" : "red", fontWeight: "bold" }}>
-                  {product.stock > 0 ? `In Stock (${product.stock})` : "Out of Stock"}
-                </p>
-              )}
-            </div>
-          );
-        })}
+                )}
+              </div>
+            );
+          })}
       </div>
 
       {/* Product Details (moved below product grid) */}
