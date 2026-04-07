@@ -212,6 +212,9 @@ function AdminProductManager({ products, fetchProducts }) {
 }
 
 function App() {
+      const [showForgotPassword, setShowForgotPassword] = useState(false);
+      const [forgotEmail, setForgotEmail] = useState("");
+      const [forgotMessage, setForgotMessage] = useState("");
     const [rememberMe, setRememberMe] = useState(false);
   // Sorting state
   const [sortBy, setSortBy] = useState("");
@@ -493,6 +496,38 @@ function App() {
 
   // ---------------- LOGIN / REGISTER UI ----------------
   if (!user) {
+    if (showForgotPassword) {
+      return (
+        <div style={authStyles.container}>
+          <div style={authStyles.card}>
+            <h2 style={{ marginBottom: 20 }}>Reset Password</h2>
+            <input style={authStyles.input} placeholder="Enter your email" value={forgotEmail} onChange={e => setForgotEmail(e.target.value)} />
+            <button style={authStyles.loginBtn} onClick={async () => {
+              setForgotMessage("");
+              if (!/^\S+@\S+\.\S+$/.test(forgotEmail)) {
+                setForgotMessage("Enter a valid email address.");
+                return;
+              }
+              try {
+                const res = await fetch("http://localhost:8080/api/users/forgot-password", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ email: forgotEmail })
+                });
+                const msg = await res.text();
+                setForgotMessage(msg);
+              } catch (err) {
+                setForgotMessage("Error sending reset request.");
+              }
+            }}>Send Reset Link</button>
+            {forgotMessage && <div style={{ color: 'green', marginTop: 8 }}>{forgotMessage}</div>}
+            <div style={{ marginTop: 16 }}>
+              <button style={{ ...authStyles.loginBtn, background: '#6c757d' }} onClick={() => setShowForgotPassword(false)}>Back to Login</button>
+            </div>
+          </div>
+        </div>
+      );
+    }
     return (
       <div style={authStyles.container}>
         <div style={authStyles.card}>
@@ -504,6 +539,9 @@ function App() {
             Remember me
           </label>
           <button style={authStyles.loginBtn} onClick={handleLogin}>Login</button>
+          <span style={{ color: '#007bff', cursor: 'pointer', marginTop: 8, display: 'inline-block' }} onClick={() => setShowForgotPassword(true)}>
+            Forget your password?
+          </span>
           {loginError && <div style={{ color: 'red', marginTop: 8 }}>{loginError}</div>}
           <div style={authStyles.divider}></div>
           <h3>Create Account</h3>
