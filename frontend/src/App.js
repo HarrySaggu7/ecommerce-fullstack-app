@@ -904,17 +904,24 @@ function App() {
           {orders.length === 0 ? (
             <p>No past orders found.</p>
           ) : (
-            orders.map((order) => (
-              <div key={order.id} style={{ marginBottom: 16, borderBottom: "1px solid #eee", paddingBottom: 8 }}>
-                <div><strong>Order #{order.id}</strong> | {order.status} | {new Date(order.createdAt).toLocaleString()}</div>
-                <div>
-                  {order.products && order.products.map((p) => (
-                    <span key={p.id} style={{ marginRight: 8 }}>{p.name}</span>
-                  ))}
+            [...orders]
+              .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+              .map((order) => (
+                <div key={order.id} style={{ marginBottom: 16, borderBottom: "1px solid #eee", paddingBottom: 8 }}>
+                  <div><strong>Order #{order.id}</strong> | {order.status} | {new Date(order.createdAt).toLocaleString()}</div>
+                  <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', margin: '8px 0' }}>
+                    {order.products && order.products.map((p) => (
+                      <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#fafbfc', borderRadius: 6, padding: '4px 10px', border: '1px solid #eee', minWidth: 120 }}>
+                        {p.imageUrl && (
+                          <img src={getImageUrl(p.imageUrl)} alt={p.name} style={{ width: 40, height: 40, objectFit: 'contain', borderRadius: 4, background: '#fff', border: '1px solid #ddd' }} />
+                        )}
+                        <span>{p.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div>Total: ₹{order.total}</div>
                 </div>
-                <div>Total: ₹{order.total}</div>
-              </div>
-            ))
+              ))
           )}
         </div>
       )}
