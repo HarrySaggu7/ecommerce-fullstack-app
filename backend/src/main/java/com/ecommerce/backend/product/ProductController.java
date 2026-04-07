@@ -4,10 +4,17 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.io.IOException;
 
+@CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping("/api/products")
-@CrossOrigin(origins = "http://localhost:3000")
 public class ProductController {
 
     private final ProductRepository productRepository;
@@ -65,5 +72,38 @@ public class ProductController {
     @GetMapping("/{id}")
     public Product getProductById(@PathVariable Long id) {
         return productRepository.findById(id).orElse(null);
+    }
+
+    // Image upload endpoint
+    @PostMapping("/upload-image")
+    public ResponseEntity<String> uploadImage(@RequestParam("file") MultipartFile file) {
+        if (file.isEmpty()) {
+            return ResponseEntity.badRequest().body("No file selected");
+        }
+        try {
+            String uploadsDir = "uploads/";
+            String realPath = System.getProperty("user.dir") + "/backend/" + uploadsDir;
+            Files.createDirectories(Paths.get(realPath));
+            String filename = System.currentTimeMillis() + "_" + file.getOriginalFilename();
+            Path filePath = Paths.get(realPath, filename);
+            file.transferTo(filePath);
+            String imageUrl = "/api/products/image/" + filename;
+            return ResponseEntity.ok(imageUrl);
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to upload image");
+        }
+    }
+
+    // Serve uploaded images
+    @GetMapping("/image/{filename}")
+    public ResponseEntity<byte[]> getImage(@PathVariable String filename) throws IOException {
+        String uploadsDir = "uploads/";
+        String realPath = System.getProperty("user.dir") + "/backend/" + uploadsDir + filename;
+        Path path = Paths.get(realPath);
+        if (!Files.exists(path)) {
+            return ResponseEntity.notFound().build();
+        }
+        byte[] image = Files.readAllBytes(path);
+        return ResponseEntity.ok().header("Content-Type", Files.probeContentType(path)).body(image);
     }
 }

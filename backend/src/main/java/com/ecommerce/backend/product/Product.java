@@ -33,6 +33,9 @@ public class Product {
     // Brand
     private String brand;
 
+    // Product image URL
+    private String imageUrl;
+
     // Rating (1-5)
     private Integer rating;
 
@@ -67,6 +70,9 @@ public class Product {
 
     public String getBrand() { return brand; }
     public void setBrand(String brand) { this.brand = brand; }
+
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
 
     public Integer getRating() { return rating; }
     public void setRating(Integer rating) { this.rating = rating; }

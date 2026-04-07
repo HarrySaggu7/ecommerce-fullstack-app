@@ -6,11 +6,18 @@ import TestimonialsPage from "./TestimonialsPage";
 import ContactUsPage from "./ContactUsPage";
 // ...existing code...
 
+// Utility to get absolute image URL
+const getImageUrl = (url) =>
+  url && url.startsWith('/api/products/image/')
+    ? `http://localhost:8080${url}`
+    : url;
+
 // AdminProductManager component
 function AdminProductManager({ products, fetchProducts }) {
   const [editing, setEditing] = useState(null);
   const [categories, setCategories] = useState([]);
-  const [form, setForm] = useState({ name: "", description: "", price: "", discount: "", stock: "", category: "", color: "", brand: "", rating: "", isNew: false });
+  const [form, setForm] = useState({ name: "", description: "", price: "", discount: "", stock: "", category: "", color: "", brand: "", rating: "", isNew: false, imageUrl: "" });
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
     // Fetch categories for dropdown
@@ -50,15 +57,40 @@ function AdminProductManager({ products, fetchProducts }) {
           brand: form.brand,
           rating: form.rating ? parseInt(form.rating) : null,
           isNew: !!form.isNew,
+          imageUrl: form.imageUrl || ""
         }),
       });
       if (!res.ok) throw new Error("Failed to save product");
     } catch (err) {
       console.error("Error saving product:", err);
     }
-    setForm({ name: "", description: "", price: "", discount: "", stock: "", category: "", color: "", brand: "", rating: "", isNew: false });
+    setForm({ name: "", description: "", price: "", discount: "", stock: "", category: "", color: "", brand: "", rating: "", isNew: false, imageUrl: "" });
     setEditing(null);
     fetchProducts();
+  };
+
+  // Handle image file upload
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploadingImage(true);
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      const res = await fetch("http://localhost:8080/api/products/upload-image", {
+        method: "POST",
+        body: formData,
+      });
+      const imageUrl = await res.text();
+      if (res.ok && imageUrl) {
+        setForm({ ...form, imageUrl });
+      } else {
+        alert("Image upload failed");
+      }
+    } catch (err) {
+      alert("Image upload failed");
+    }
+    setUploadingImage(false);
   };
 
   // Edit product
@@ -75,6 +107,7 @@ function AdminProductManager({ products, fetchProducts }) {
       brand: product.brand || "",
       rating: product.rating || "",
       isNew: !!product.isNew,
+      imageUrl: product.imageUrl || ""
     });
   };
 
@@ -112,9 +145,14 @@ function AdminProductManager({ products, fetchProducts }) {
           />
           New Product
         </label>
+        <input type="file" accept="image/*" onChange={handleImageUpload} />
+        {uploadingImage && <span>Uploading...</span>}
+        {form.imageUrl && (
+          <img src={getImageUrl(form.imageUrl)} alt="Preview" style={{ maxWidth: 60, maxHeight: 60, borderRadius: 4, border: '1px solid #ccc' }} />
+        )}
         <button type="submit">{editing ? "Update" : "Add"} Product</button>
         {editing && (
-          <button type="button" onClick={() => { setEditing(null); setForm({ name: "", description: "", price: "", discount: "", stock: "", category: "", color: "", brand: "", rating: "" }); }}>
+          <button type="button" onClick={() => { setEditing(null); setForm({ name: "", description: "", price: "", discount: "", stock: "", category: "", color: "", brand: "", rating: "", isNew: false, imageUrl: "" }); }}>
             Cancel
           </button>
         )}
@@ -528,6 +566,9 @@ function App() {
               style={styles.card}
               onClick={() => handleProductClick(product.id)}
             >
+              {product.imageUrl && (
+                <img src={getImageUrl(product.imageUrl)} alt={product.name} style={{ width: '100%', maxHeight: 140, objectFit: 'contain', borderRadius: 6, marginBottom: 8, background: '#f8f8f8' }} />
+              )}
               <h4 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 {product.name || 'No Name'}
                 {product.isNew && (
@@ -570,6 +611,9 @@ function App() {
       {/* Product Details (moved below product grid) */}
       {selectedProduct && typeof selectedProduct === 'object' && selectedProduct.id && (
         <div style={styles.detailsCard}>
+          {selectedProduct.imageUrl && (
+            <img src={getImageUrl(selectedProduct.imageUrl)} alt={selectedProduct.name} style={{ width: 220, maxHeight: 220, objectFit: 'contain', borderRadius: 8, marginBottom: 16, background: '#f8f8f8' }} />
+          )}
           <h2>{selectedProduct.name || 'No Name'}</h2>
           {selectedProduct.discount && selectedProduct.discount > 0 && (
             <span style={{ color: "#d9534f", fontWeight: "bold", marginRight: 8 }}>Sale</span>
