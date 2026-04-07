@@ -806,11 +806,27 @@ function App() {
           <CheckoutForm onSubmit={handleAddressSubmit} />
         ) : checkoutAddresses ? (
           <>
-            <div style={{ marginBottom: 16 }}>
-              <h4>Billing Address</h4>
-              <pre style={{ background: '#f8f8f8', padding: 8 }}>{JSON.stringify(checkoutAddresses.billingAddress, null, 2)}</pre>
-              <h4>Shipping Address</h4>
-              <pre style={{ background: '#f8f8f8', padding: 8 }}>{JSON.stringify(checkoutAddresses.shippingAddress, null, 2)}</pre>
+            <div style={{ marginBottom: 16, display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+              <div style={{ border: '1px solid #eee', borderRadius: 8, padding: 16, minWidth: 260, background: '#fafbfc' }}>
+                <h4 style={{ marginTop: 0, marginBottom: 8 }}>Billing Address</h4>
+                <div><strong>Name:</strong> {checkoutAddresses.billingAddress.fullName}</div>
+                <div><strong>Street:</strong> {checkoutAddresses.billingAddress.street}</div>
+                <div><strong>City:</strong> {checkoutAddresses.billingAddress.city}</div>
+                <div><strong>State:</strong> {checkoutAddresses.billingAddress.state}</div>
+                <div><strong>Postal Code:</strong> {checkoutAddresses.billingAddress.postalCode}</div>
+                <div><strong>Country:</strong> {checkoutAddresses.billingAddress.country}</div>
+                <div><strong>Phone:</strong> {checkoutAddresses.billingAddress.phoneNumber}</div>
+              </div>
+              <div style={{ border: '1px solid #eee', borderRadius: 8, padding: 16, minWidth: 260, background: '#fafbfc' }}>
+                <h4 style={{ marginTop: 0, marginBottom: 8 }}>Shipping Address</h4>
+                <div><strong>Name:</strong> {checkoutAddresses.shippingAddress.fullName}</div>
+                <div><strong>Street:</strong> {checkoutAddresses.shippingAddress.street}</div>
+                <div><strong>City:</strong> {checkoutAddresses.shippingAddress.city}</div>
+                <div><strong>State:</strong> {checkoutAddresses.shippingAddress.state}</div>
+                <div><strong>Postal Code:</strong> {checkoutAddresses.shippingAddress.postalCode}</div>
+                <div><strong>Country:</strong> {checkoutAddresses.shippingAddress.country}</div>
+                <div><strong>Phone:</strong> {checkoutAddresses.shippingAddress.phoneNumber}</div>
+              </div>
             </div>
             <div style={{ margin: "20px 0" }}>
               <PayPalButton
