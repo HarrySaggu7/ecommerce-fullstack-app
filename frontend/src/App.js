@@ -228,19 +228,19 @@ function App() {
   const [orders, setOrders] = useState([]);
 
   // Filter states
-  const [filterColor, setFilterColor] = useState("");
-  const [filterBrand, setFilterBrand] = useState("");
+  const [filterColor, setFilterColor] = useState("All");
+  const [filterBrand, setFilterBrand] = useState("All");
+  const [filterRating, setFilterRating] = useState("All");
   const [brandOptions, setBrandOptions] = useState([]);
-  const [filterRating, setFilterRating] = useState("");
   const [colorOptions, setColorOptions] = useState([]);
 
   // Unified fetchProducts: always uses all filters and search
   const fetchProducts = async (paramsOverride = {}) => {
     const params = {
       keyword: search,
-      color: filterColor,
-      brand: filterBrand,
-      rating: filterRating,
+      color: filterColor && filterColor !== "All" ? filterColor : null,
+      brand: filterBrand && filterBrand !== "All" ? filterBrand : null,
+      rating: filterRating && filterRating !== "All" ? parseInt(filterRating) : null,
       ...paramsOverride
     };
     const hasAny = Object.values(params).some(v => v && v !== "");
@@ -250,7 +250,7 @@ function App() {
     } else {
       url = "http://localhost:8080/api/products/filter?";
       const query = Object.entries(params)
-        .filter(([_, v]) => v && v !== "")
+        .filter(([_, v]) => v !== null && v !== "")
         .map(([k, v]) => `${k}=${encodeURIComponent(v)}`)
         .join("&");
       url += query;
@@ -286,13 +286,29 @@ function App() {
     // eslint-disable-next-line
   }, [search, filterColor, filterBrand, filterRating]);
 
-  // Update color and brand options whenever products change
+  // Fetch all products once for filter options
+  const [allProducts, setAllProducts] = useState([]);
+
   useEffect(() => {
-    const uniqueColors = Array.from(new Set(products.map(p => p.color).filter(Boolean)));
-    setColorOptions(uniqueColors);
-    const uniqueBrands = Array.from(new Set(products.map(p => p.brand).filter(Boolean)));
-    setBrandOptions(uniqueBrands);
-  }, [products]);
+    const fetchAll = async () => {
+      try {
+        const res = await fetch("http://localhost:8080/api/products");
+        const data = await res.json();
+        setAllProducts(Array.isArray(data) ? data : []);
+      } catch (err) {
+        setAllProducts([]);
+      }
+    };
+    fetchAll();
+  }, []);
+
+  // Update color and brand options from allProducts
+  useEffect(() => {
+    const uniqueColors = Array.from(new Set(allProducts.map(p => p.color).filter(Boolean)));
+    setColorOptions(["All", ...uniqueColors]);
+    const uniqueBrands = Array.from(new Set(allProducts.map(p => p.brand).filter(Boolean)));
+    setBrandOptions(["All", ...uniqueBrands]);
+  }, [allProducts]);
 
   const handleRegister = async () => {
     try {
@@ -503,7 +519,6 @@ function App() {
                     value={filterColor}
                     onChange={e => setFilterColor(e.target.value)}
                   >
-                    <option value="">All</option>
                     {colorOptions.map((color) => (
                       <option key={color} value={color}>{color}</option>
                     ))}
@@ -516,7 +531,6 @@ function App() {
                     value={filterBrand}
                     onChange={e => setFilterBrand(e.target.value)}
                   >
-                    <option value="">All</option>
                     {brandOptions.map((brand) => (
                       <option key={brand} value={brand}>{brand}</option>
                     ))}
@@ -529,12 +543,8 @@ function App() {
                     value={filterRating}
                     onChange={e => setFilterRating(e.target.value)}
                   >
-                    <option value="">All</option>
-                    <option value="1">1</option>
-                    <option value="2">2</option>
-                    <option value="3">3</option>
-                    <option value="4">4</option>
-                    <option value="5">5</option>
+                    <option value="All">All</option>
+                    {[1,2,3,4,5].map(r => <option key={r} value={r}>{r}</option>)}
                   </select>
                 </div>
               </div>
@@ -542,9 +552,9 @@ function App() {
             <button
               style={{ height: 40, alignSelf: "center" }}
               onClick={() => {
-                setFilterColor("");
-                setFilterBrand("");
-                setFilterRating("");
+                setFilterColor("All");
+                setFilterBrand("All");
+                setFilterRating("All");
                 setSearch("");
               }}
             >

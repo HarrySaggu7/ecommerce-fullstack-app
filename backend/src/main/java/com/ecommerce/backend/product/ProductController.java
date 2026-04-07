@@ -60,8 +60,13 @@ public class ProductController {
             @RequestParam(required = false) String color,
             @RequestParam(required = false) String brand,
             @RequestParam(required = false) Integer rating) {
-        System.out.println("[DEBUG] /filter called with: keyword='" + keyword + "', color='" + color + "', brand='" + brand + "', rating=" + rating);
-        return productService.filterProducts(keyword, color, brand, rating);
+        try {
+            System.out.println("[DEBUG] /filter called with: keyword='" + keyword + "', color='" + color + "', brand='" + brand + "', rating=" + rating);
+            return productService.filterProducts(keyword, color, brand, rating);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        }
     }
 
     @GetMapping("/new")

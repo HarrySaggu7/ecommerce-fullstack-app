@@ -11,8 +11,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     @Query("SELECT p FROM Product p WHERE " +
             "(:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
-            "(:color IS NULL OR LOWER(CAST(p.color AS string)) = LOWER(CAST(:color AS string))) AND " +
-            "(:brand IS NULL OR LOWER(CAST(p.brand AS string)) = LOWER(CAST(:brand AS string))) AND " +
+            "(:color IS NULL OR (p.color IS NOT NULL AND LOWER(p.color) = LOWER(:color))) AND " +
+            "(:brand IS NULL OR (p.brand IS NOT NULL AND LOWER(p.brand) = LOWER(:brand))) AND " +
             "(:rating IS NULL OR p.rating = :rating)")
     List<Product> filterProducts(@Param("keyword") String keyword,
                                  @Param("color") String color,

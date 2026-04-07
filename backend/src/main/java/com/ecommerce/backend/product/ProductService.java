@@ -26,13 +26,13 @@ public class ProductService {
     }
 
     public List<Product> filterProducts(String keyword, String color, String brand, Integer rating) {
-        // Convert empty strings and 'null' string to null for optional params
-        if (keyword != null && (keyword.isEmpty() || keyword.equalsIgnoreCase("null"))) keyword = null;
-        if (color != null && (color.isEmpty() || color.equalsIgnoreCase("null"))) color = null;
-        if (brand != null && (brand.isEmpty() || brand.equalsIgnoreCase("null"))) brand = null;
-        // If rating is 0 or null, ignore it
-        if (rating != null && rating == 0) rating = null;
-        return productRepository.filterProducts(keyword, color, brand, rating);
+        List<Product> products = productRepository.findAll();
+        return products.stream()
+                .filter(p -> keyword == null || keyword.isEmpty() || p.getName().toLowerCase().contains(keyword.toLowerCase()))
+                .filter(p -> color == null || color.isEmpty() || (p.getColor() != null && p.getColor().equalsIgnoreCase(color)))
+                .filter(p -> brand == null || brand.isEmpty() || (p.getBrand() != null && p.getBrand().equalsIgnoreCase(brand)))
+                .filter(p -> rating == null || rating == 0 || (p.getRating() != null && p.getRating().equals(rating)))
+                .toList();
     }
 
     public List<Product> getNewProducts() {
