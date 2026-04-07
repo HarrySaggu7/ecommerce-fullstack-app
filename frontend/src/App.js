@@ -160,7 +160,11 @@ function AdminProductManager({ products, fetchProducts }) {
 
 function App() {
 
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    // Initialize user from localStorage if present
+    const stored = localStorage.getItem("user");
+    return stored ? JSON.parse(stored) : null;
+  });
   const [page, setPage] = useState("home");
   const [products, setProducts] = useState([]);
   const [search, setSearch] = useState("");
@@ -265,11 +269,14 @@ function App() {
       if (!response.ok) throw new Error("Login failed");
       const data = await response.json();
       // Add isAdmin property for frontend admin check
+      let userObj;
       if (data && data.role && data.role.toUpperCase() === "ADMIN") {
-        setUser({ ...data, isAdmin: true });
+        userObj = { ...data, isAdmin: true };
       } else {
-        setUser({ ...data, isAdmin: false });
+        userObj = { ...data, isAdmin: false };
       }
+      setUser(userObj);
+      localStorage.setItem("user", JSON.stringify(userObj));
     } catch (err) {
       console.error("Error logging in:", err);
       alert("Login failed. Please try again.");
@@ -278,6 +285,7 @@ function App() {
 
   const handleLogout = () => {
     setUser(null);
+    localStorage.removeItem("user");
     setSelectedProduct(null);
     setOrderPlaced(false);
   };
