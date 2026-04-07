@@ -216,6 +216,10 @@ function App() {
   const [sortBy, setSortBy] = useState("");
   const [sortOrder, setSortOrder] = useState("asc"); // asc or desc
 
+  // Validation states
+  const [loginError, setLoginError] = useState("");
+  const [registerError, setRegisterError] = useState("");
+
   const [user, setUser] = useState(() => {
     // Initialize user from localStorage if present
     const stored = localStorage.getItem("user");
@@ -320,6 +324,16 @@ function App() {
   }, [allProducts]);
 
   const handleRegister = async () => {
+    setRegisterError("");
+    // Basic validation
+    if (!name || !email || !password) {
+      setRegisterError("All fields are required.");
+      return;
+    }
+    if (!/^\S+@\S+\.\S+$/.test(email)) {
+      setRegisterError("Invalid email format.");
+      return;
+    }
     try {
       const response = await fetch("http://localhost:8080/api/users/register", {
         method: "POST",
@@ -331,11 +345,20 @@ function App() {
       alert("Registered successfully!");
     } catch (err) {
       console.error("Error registering:", err);
-      alert("Registration failed. Please try again.");
+      setRegisterError("Registration failed. Please try again.");
     }
   };
 
   const handleLogin = async () => {
+    setLoginError("");
+    if (!email || !password) {
+      setLoginError("Both email and password are required.");
+      return;
+    }
+    if (!/^\S+@\S+\.\S+$/.test(email)) {
+      setLoginError("Invalid email format.");
+      return;
+    }
     try {
       const response = await fetch("http://localhost:8080/api/users/login", {
         method: "POST",
@@ -355,7 +378,7 @@ function App() {
       localStorage.setItem("user", JSON.stringify(userObj));
     } catch (err) {
       console.error("Error logging in:", err);
-      alert("Login failed. Please try again.");
+      setLoginError("Login failed. Please try again.");
     }
   };
 
@@ -465,12 +488,14 @@ function App() {
           <input style={authStyles.input} placeholder="Email" onChange={(e) => setEmail(e.target.value)} />
           <input style={authStyles.input} type="password" placeholder="Password" onChange={(e) => setPassword(e.target.value)} />
           <button style={authStyles.loginBtn} onClick={handleLogin}>Login</button>
+          {loginError && <div style={{ color: 'red', marginTop: 8 }}>{loginError}</div>}
           <div style={authStyles.divider}></div>
           <h3>Create Account</h3>
           <input style={authStyles.input} placeholder="Name" onChange={(e) => setName(e.target.value)} />
           <input style={authStyles.input} placeholder="Email" onChange={(e) => setEmail(e.target.value)} />
           <input style={authStyles.input} type="password" placeholder="Password" onChange={(e) => setPassword(e.target.value)} />
           <button style={authStyles.registerBtn} onClick={handleRegister}>Register</button>
+          {registerError && <div style={{ color: 'red', marginTop: 8 }}>{registerError}</div>}
           <div style={{ margin: "20px 0 0 0", textAlign: "center" }}>
             <span style={{ color: "#888" }}>or</span>
             <br />
