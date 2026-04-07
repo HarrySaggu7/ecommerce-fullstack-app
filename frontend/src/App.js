@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import PayPalButton from "./PayPalButton";
 import ReviewPage from "./ReviewPage";
-// import NewProductsPage from "./NewProductsPage";
 import TestimonialsPage from "./TestimonialsPage";
 import ContactUsPage from "./ContactUsPage";
+import CheckoutForm from "./CheckoutForm";
 // ...existing code...
 
 // Utility to get absolute image URL
@@ -240,6 +240,8 @@ function App() {
   const [mobile, setMobile] = useState("");
   const [cart, setCart] = useState([]);
   const [orderPlaced, setOrderPlaced] = useState(false);
+  const [showCheckoutForm, setShowCheckoutForm] = useState(false);
+  const [checkoutAddresses, setCheckoutAddresses] = useState(null);
   const [orders, setOrders] = useState([]);
 
   // Filter states
@@ -459,39 +461,18 @@ function App() {
     0
   );
 
-  const handleCheckout = async () => {
+  const handleCheckout = () => {
     if (cart.length === 0) {
       alert("Cart is empty!");
       return;
     }
-    if (!user || !user.id) {
-      alert("You must be logged in to place an order.");
-      return;
-    }
-    const orderPayload = {
-      user: { id: user.id },
-      products: cart.map(({ id }) => ({ id })),
-      total: totalPrice,
-      status: "PLACED",
-      createdAt: new Date().toISOString(),
-    };
-    try {
-      const response = await fetch("http://localhost:8080/api/orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(orderPayload),
-      });
-      if (response.ok) {
-        setOrderPlaced(true);
-        setCart([]);
-        fetchOrders();
-      } else {
-        alert("Order failed. Please try again.");
-      }
-    } catch (err) {
-      console.error("Error placing order:", err);
-      alert("Order failed. Please try again.");
-    }
+    setShowCheckoutForm(true);
+  };
+
+  const handleAddressSubmit = async (addresses) => {
+    setCheckoutAddresses(addresses);
+    setShowCheckoutForm(false);
+    // Proceed to payment (show PayPalButton or place order directly)
   };
 
   // ---------------- LOGIN / REGISTER UI ----------------
@@ -819,42 +800,23 @@ function App() {
       {/* Cart Section */}
       <div style={styles.cartBox}>
         <h3>🛒 Cart</h3>
-
         {cart.length === 0 ? (
           <p>No items in cart</p>
-        ) : (
+        ) : showCheckoutForm ? (
+          <CheckoutForm onSubmit={handleAddressSubmit} />
+        ) : checkoutAddresses ? (
           <>
-            {cart.map((item) => (
-              <div key={item.id} style={styles.cartItem}>
-                <div>
-                  <strong>{item.name}</strong> <p>₹{item.price}</p>
-                </div>
-
-                <div style={styles.qtyControls}>
-                  <button onClick={() => decreaseQty(item.id)}>-</button>
-                  <span>{item.quantity}</span>
-                  <button onClick={() => increaseQty(item.id)}>+</button>
-                </div>
-
-                <button
-                  style={styles.removeBtn}
-                  onClick={() => removeItem(item.id)}
-                >
-                  Remove
-                </button>
-              </div>
-            ))}
-
-            <h3 style={{ marginTop: "15px" }}>
-              Total: ₹{totalPrice}
-            </h3>
-            {/* PayPal Payment Button */}
+            <div style={{ marginBottom: 16 }}>
+              <h4>Billing Address</h4>
+              <pre style={{ background: '#f8f8f8', padding: 8 }}>{JSON.stringify(checkoutAddresses.billingAddress, null, 2)}</pre>
+              <h4>Shipping Address</h4>
+              <pre style={{ background: '#f8f8f8', padding: 8 }}>{JSON.stringify(checkoutAddresses.shippingAddress, null, 2)}</pre>
+            </div>
             <div style={{ margin: "20px 0" }}>
               <PayPalButton
-                key={totalPrice} // Only remount when total changes
+                key={totalPrice}
                 total={totalPrice}
                 onSuccess={async (payment) => {
-                  // Place order after successful payment
                   if (!user || !user.id) {
                     alert("You must be logged in to place an order.");
                     return;
@@ -865,7 +827,9 @@ function App() {
                     total: totalPrice,
                     status: "PAID",
                     createdAt: new Date().toISOString(),
-                    paymentId: payment.id
+                    paymentId: payment.id,
+                    billingAddress: checkoutAddresses.billingAddress,
+                    shippingAddress: checkoutAddresses.shippingAddress
                   };
                   const response = await fetch("http://localhost:8080/api/orders", {
                     method: "POST",
@@ -875,6 +839,7 @@ function App() {
                   if (response.ok) {
                     setOrderPlaced(true);
                     setCart([]);
+                    setCheckoutAddresses(null);
                     fetchOrders();
                   } else {
                     alert("Order failed. Please try again.");
@@ -883,8 +848,32 @@ function App() {
               />
             </div>
           </>
+        ) : (
+          <>
+            {cart.map((item) => (
+              <div key={item.id} style={styles.cartItem}>
+                <div>
+                  <strong>{item.name}</strong> <p>₹{item.price}</p>
+                </div>
+                <div style={styles.qtyControls}>
+                  <button onClick={() => decreaseQty(item.id)}>-</button>
+                  <span>{item.quantity}</span>
+                  <button onClick={() => increaseQty(item.id)}>+</button>
+                </div>
+                <button
+                  style={styles.removeBtn}
+                  onClick={() => removeItem(item.id)}
+                >
+                  Remove
+                </button>
+              </div>
+            ))}
+            <h3 style={{ marginTop: "15px" }}>
+              Total: ₹{totalPrice}
+            </h3>
+            <button style={{ marginTop: 16 }} onClick={handleCheckout}>Checkout</button>
+          </>
         )}
-
         {orderPlaced && (
           <div style={styles.successBox}>
             <h2>✅ Order Placed Successfully!</h2>

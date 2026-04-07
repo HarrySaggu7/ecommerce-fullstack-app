@@ -21,6 +21,9 @@ public class OrderService {
 
 
     @Autowired
+    private AddressRepository addressRepository;
+
+    @Autowired
     private OrderEmailService orderEmailService;
 
     @Autowired
@@ -40,6 +43,16 @@ public class OrderService {
                 .collect(Collectors.toList());
             order.setProducts(managedProducts);
         }
+
+        // Save billing and shipping addresses if present
+        if (order.getBillingAddress() != null) {
+            Address billing = addressRepository.save(order.getBillingAddress());
+            order.setBillingAddress(billing);
+        }
+        if (order.getShippingAddress() != null) {
+            Address shipping = addressRepository.save(order.getShippingAddress());
+            order.setShippingAddress(shipping);
+        }
         Order savedOrder = orderRepository.save(order);
         logger.info("Order saved with id: {} for user id: {}", savedOrder.getId(), savedOrder.getUser() != null ? savedOrder.getUser().getId() : null);
         // Send confirmation email if user has email
@@ -53,6 +66,13 @@ public class OrderService {
                 for (Product p : savedOrder.getProducts()) {
                     details.append("\n - ").append(p.getName());
                 }
+            }
+            if (savedOrder.getShippingAddress() != null) {
+                details.append("\nShipping Address: ").append(savedOrder.getShippingAddress().getStreet()).append(", ")
+                    .append(savedOrder.getShippingAddress().getCity()).append(", ")
+                    .append(savedOrder.getShippingAddress().getState()).append(", ")
+                    .append(savedOrder.getShippingAddress().getPostalCode()).append(", ")
+                    .append(savedOrder.getShippingAddress().getCountry());
             }
             orderEmailService.sendOrderConfirmation(savedOrder.getUser().getEmail(), details.toString());
         }

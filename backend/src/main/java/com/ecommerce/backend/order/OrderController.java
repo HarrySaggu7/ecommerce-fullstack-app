@@ -11,6 +11,9 @@ public class OrderController {
     @Autowired
     private OrderService orderService;
 
+    /**
+     * Place an order. The order payload must include billingAddress and shippingAddress fields.
+     */
     @PostMapping
     public Order placeOrder(@RequestBody Order order) {
         return orderService.placeOrder(order);
