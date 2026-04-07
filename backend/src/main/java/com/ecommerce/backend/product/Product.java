@@ -36,6 +36,10 @@ public class Product {
     // Rating (1-5)
     private Integer rating;
 
+    // Mark as new product
+    @Column(name = "is_new")
+    private boolean isNew = false;
+
     // Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -66,4 +70,7 @@ public class Product {
 
     public Integer getRating() { return rating; }
     public void setRating(Integer rating) { this.rating = rating; }
+
+    public boolean getIsNew() { return isNew; }
+    public void setIsNew(boolean isNew) { this.isNew = isNew; }
 }

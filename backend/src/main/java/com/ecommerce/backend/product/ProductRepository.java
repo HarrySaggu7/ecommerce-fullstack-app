@@ -18,4 +18,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
                                  @Param("color") String color,
                                  @Param("brand") String brand,
                                  @Param("rating") Integer rating);
+
+    // Find all products marked as new
+    List<Product> findByIsNewTrue();
 }

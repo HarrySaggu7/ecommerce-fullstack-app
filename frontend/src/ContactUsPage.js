@@ -13,10 +13,19 @@ function ContactUsPage({ user }) {
     if (user && user.email) setEmail(user.email);
   }, [user]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Here you would send the message to the backend
-    setSubmitted(true);
+    try {
+      const res = await fetch('http://localhost:8080/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, message })
+      });
+      if (!res.ok) throw new Error('Failed to send message');
+      setSubmitted(true);
+    } catch (err) {
+      alert('Failed to send message. Please try again.');
+    }
   };
 
   return (

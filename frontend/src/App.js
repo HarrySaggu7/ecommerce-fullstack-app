@@ -4,12 +4,13 @@ import ReviewPage from "./ReviewPage";
 import NewProductsPage from "./NewProductsPage";
 import TestimonialsPage from "./TestimonialsPage";
 import ContactUsPage from "./ContactUsPage";
+// ...existing code...
 
 // AdminProductManager component
 function AdminProductManager({ products, fetchProducts }) {
   const [editing, setEditing] = useState(null);
   const [categories, setCategories] = useState([]);
-  const [form, setForm] = useState({ name: "", description: "", price: "", discount: "", stock: "", category: "", color: "", brand: "", rating: "" });
+  const [form, setForm] = useState({ name: "", description: "", price: "", discount: "", stock: "", category: "", color: "", brand: "", rating: "", isNew: false });
 
   useEffect(() => {
     // Fetch categories for dropdown
@@ -48,13 +49,14 @@ function AdminProductManager({ products, fetchProducts }) {
           color: form.color,
           brand: form.brand,
           rating: form.rating ? parseInt(form.rating) : null,
+          isNew: !!form.isNew,
         }),
       });
       if (!res.ok) throw new Error("Failed to save product");
     } catch (err) {
       console.error("Error saving product:", err);
     }
-    setForm({ name: "", description: "", price: "", discount: "", stock: "", category: "", color: "", brand: "", rating: "" });
+    setForm({ name: "", description: "", price: "", discount: "", stock: "", category: "", color: "", brand: "", rating: "", isNew: false });
     setEditing(null);
     fetchProducts();
   };
@@ -72,6 +74,7 @@ function AdminProductManager({ products, fetchProducts }) {
       color: product.color || "",
       brand: product.brand || "",
       rating: product.rating || "",
+      isNew: !!product.isNew,
     });
   };
 
@@ -101,6 +104,14 @@ function AdminProductManager({ products, fetchProducts }) {
         <input placeholder="Color" value={form.color} onChange={e => setForm({ ...form, color: e.target.value })} />
         <input placeholder="Brand" value={form.brand} onChange={e => setForm({ ...form, brand: e.target.value })} />
         <input type="number" placeholder="Rating (1-5)" min="1" max="5" value={form.rating} onChange={e => setForm({ ...form, rating: e.target.value })} />
+        <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <input
+            type="checkbox"
+            checked={form.isNew}
+            onChange={e => setForm({ ...form, isNew: e.target.checked })}
+          />
+          New Product
+        </label>
         <button type="submit">{editing ? "Update" : "Add"} Product</button>
         {editing && (
           <button type="button" onClick={() => { setEditing(null); setForm({ name: "", description: "", price: "", discount: "", stock: "", category: "", color: "", brand: "", rating: "" }); }}>
@@ -253,7 +264,12 @@ function App() {
       });
       if (!response.ok) throw new Error("Login failed");
       const data = await response.json();
-      setUser(data);
+      // Add isAdmin property for frontend admin check
+      if (data && data.role && data.role.toUpperCase() === "ADMIN") {
+        setUser({ ...data, isAdmin: true });
+      } else {
+        setUser({ ...data, isAdmin: false });
+      }
     } catch (err) {
       console.error("Error logging in:", err);
       alert("Login failed. Please try again.");
@@ -391,10 +407,16 @@ function App() {
           <button onClick={() => setPage("reviews")}>Reviews</button>
           <button onClick={() => setPage("testimonials")}>Testimonials</button>
           <button onClick={() => setPage("contact")}>Contact Us</button>
+          {user && user.isAdmin && (
+            <button onClick={() => setPage("admin")}>Admin</button>
+          )}
         </div>
         <div style={{ flex: 1 }} />
         <button style={styles.logoutBtn} onClick={handleLogout}>Logout</button>
       </nav>
+            {page === "admin" && user && user.isAdmin && (
+              <AdminProductManager products={products} fetchProducts={fetchProducts} />
+            )}
       {page === "new" && <NewProductsPage />}
       {page === "reviews" && <ReviewPage />}
       {page === "testimonials" && <TestimonialsPage />}

@@ -35,6 +35,10 @@ public class ProductService {
         return productRepository.filterProducts(keyword, color, brand, rating);
     }
 
+    public List<Product> getNewProducts() {
+        return productRepository.findByIsNewTrue();
+    }
+
 
     public Product updateProduct(Product product) {
         // Optionally validate category, color, brand, rating here

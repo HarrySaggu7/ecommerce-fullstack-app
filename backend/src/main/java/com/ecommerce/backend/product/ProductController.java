@@ -56,8 +56,14 @@ public class ProductController {
         System.out.println("[DEBUG] /filter called with: keyword='" + keyword + "', color='" + color + "', brand='" + brand + "', rating=" + rating);
         return productService.filterProducts(keyword, color, brand, rating);
     }
-@GetMapping("/{id}")
-public Product getProductById(@PathVariable Long id) {
-    return productRepository.findById(id).orElse(null);
-}
+
+    @GetMapping("/new")
+    public List<Product> getNewProducts() {
+        return productService.getNewProducts();
+    }
+
+    @GetMapping("/{id}")
+    public Product getProductById(@PathVariable Long id) {
+        return productRepository.findById(id).orElse(null);
+    }
 }
