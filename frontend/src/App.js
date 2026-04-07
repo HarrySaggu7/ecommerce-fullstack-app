@@ -137,7 +137,20 @@ function AdminProductManager({ products, fetchProducts }) {
         <tbody>
           {products.map((p) => (
             <tr key={p.id}>
-              <td>{p.name}</td>
+              <td>
+                {p.name}
+                {p.isNew && (
+                  <span style={{
+                    background: '#28a745',
+                    color: 'white',
+                    fontSize: '0.75em',
+                    fontWeight: 'bold',
+                    borderRadius: 4,
+                    padding: '2px 6px',
+                    marginLeft: 6
+                  }}>NEW</span>
+                )}
+              </td>
               <td>{p.description}</td>
               <td>₹{p.price}</td>
               <td>{p.discount || 0}</td>
@@ -515,7 +528,20 @@ function App() {
               style={styles.card}
               onClick={() => handleProductClick(product.id)}
             >
-              <h4>{product.name || 'No Name'}</h4>
+              <h4 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                {product.name || 'No Name'}
+                {product.isNew && (
+                  <span style={{
+                    background: '#28a745',
+                    color: 'white',
+                    fontSize: '0.75em',
+                    fontWeight: 'bold',
+                    borderRadius: 4,
+                    padding: '2px 6px',
+                    marginLeft: 4
+                  }}>NEW</span>
+                )}
+              </h4>
               {product.color && (
                 <div style={{ marginBottom: 4, color: '#555', fontSize: 14 }}>
                   <strong>Color:</strong> {product.color}
