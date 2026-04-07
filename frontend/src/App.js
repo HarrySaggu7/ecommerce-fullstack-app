@@ -212,6 +212,7 @@ function AdminProductManager({ products, fetchProducts }) {
 }
 
 function App() {
+    const [rememberMe, setRememberMe] = useState(false);
   // Sorting state
   const [sortBy, setSortBy] = useState("");
   const [sortOrder, setSortOrder] = useState("asc"); // asc or desc
@@ -221,8 +222,8 @@ function App() {
   const [registerError, setRegisterError] = useState("");
 
   const [user, setUser] = useState(() => {
-    // Initialize user from localStorage if present
-    const stored = localStorage.getItem("user");
+    // Initialize user from localStorage or sessionStorage if present
+    const stored = localStorage.getItem("user") || sessionStorage.getItem("user");
     return stored ? JSON.parse(stored) : null;
   });
   const [page, setPage] = useState("home");
@@ -381,7 +382,11 @@ function App() {
         userObj = { ...data, isAdmin: false };
       }
       setUser(userObj);
-      localStorage.setItem("user", JSON.stringify(userObj));
+      if (rememberMe) {
+        localStorage.setItem("user", JSON.stringify(userObj));
+      } else {
+        sessionStorage.setItem("user", JSON.stringify(userObj));
+      }
     } catch (err) {
       console.error("Error logging in:", err);
       setLoginError("Login failed. Please try again.");
@@ -391,6 +396,7 @@ function App() {
   const handleLogout = () => {
     setUser(null);
     localStorage.removeItem("user");
+    sessionStorage.removeItem("user");
     setSelectedProduct(null);
     setOrderPlaced(false);
   };
@@ -493,6 +499,10 @@ function App() {
           <h2 style={{ marginBottom: "20px" }}>Welcome Back</h2>
           <input style={authStyles.input} placeholder="Email" onChange={(e) => setEmail(e.target.value)} />
           <input style={authStyles.input} type="password" placeholder="Password" onChange={(e) => setPassword(e.target.value)} />
+          <label style={{ display: 'flex', alignItems: 'center', margin: '8px 0' }}>
+            <input type="checkbox" checked={rememberMe} onChange={e => setRememberMe(e.target.checked)} style={{ marginRight: 6 }} />
+            Remember me
+          </label>
           <button style={authStyles.loginBtn} onClick={handleLogin}>Login</button>
           {loginError && <div style={{ color: 'red', marginTop: 8 }}>{loginError}</div>}
           <div style={authStyles.divider}></div>
