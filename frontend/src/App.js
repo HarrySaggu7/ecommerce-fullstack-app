@@ -502,7 +502,7 @@ function App() {
               <AdminProductManager products={products} fetchProducts={fetchProducts} />
             )}
       {/* {page === "new" && <NewProductsPage />} */}
-      {page === "reviews" && <ReviewPage />}
+      {page === "reviews" && <ReviewPage user={user} />}
       {page === "testimonials" && <TestimonialsPage />}
       {page === "contact" && <ContactUsPage user={user} />}
       {page === "home" && (

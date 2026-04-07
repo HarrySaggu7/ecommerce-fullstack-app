@@ -1,8 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 
-function ReviewPage() {
+function ReviewPage({ user }) {
   const [reviews, setReviews] = useState([]);
-  const [name, setName] = useState('');
   const [comment, setComment] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -26,17 +26,16 @@ function ReviewPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (name && comment) {
+    if (user && user.name && comment) {
       try {
         const res = await fetch('http://localhost:8080/api/reviews', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, comment })
+          body: JSON.stringify({ name: user.name, comment })
         });
         if (!res.ok) throw new Error('Failed to submit review');
         const newReview = await res.json();
         setReviews([...reviews, newReview]);
-        setName('');
         setComment('');
       } catch (err) {
         setError('Could not submit review.');
@@ -59,8 +58,8 @@ function ReviewPage() {
         <input
           type="text"
           placeholder="Your Name"
-          value={name}
-          onChange={e => setName(e.target.value)}
+          value={user && user.name ? user.name : ''}
+          readOnly
           required
         />
         <br />
@@ -71,7 +70,8 @@ function ReviewPage() {
           required
         />
         <br />
-        <button type="submit">Submit</button>
+        <button type="submit" disabled={!user || !user.name}>Submit</button>
+        {!user && <p style={{color:'red'}}>You must be logged in to leave a review.</p>}
       </form>
     </div>
   );
