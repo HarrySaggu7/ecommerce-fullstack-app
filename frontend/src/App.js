@@ -67,6 +67,7 @@ function AdminProductManager({ products, fetchProducts }) {
     setForm({ name: "", description: "", price: "", discount: "", stock: "", category: "", color: "", brand: "", rating: "", isNew: false, imageUrl: "" });
     setEditing(null);
     fetchProducts();
+    window.dispatchEvent(new Event('refreshAllProducts'));
   };
 
   // Handle image file upload
@@ -120,6 +121,7 @@ function AdminProductManager({ products, fetchProducts }) {
       console.error("Error deleting product:", err);
     }
     fetchProducts();
+    window.dispatchEvent(new Event('refreshAllProducts'));
   };
 
   return (
@@ -303,6 +305,10 @@ function App() {
       }
     };
     fetchAll();
+    // Listen for refreshAllProducts event to update filter options after product changes
+    const handler = () => fetchAll();
+    window.addEventListener('refreshAllProducts', handler);
+    return () => window.removeEventListener('refreshAllProducts', handler);
   }, []);
 
   // Update color and brand options from allProducts
