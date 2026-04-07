@@ -232,6 +232,8 @@ function App() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [gender, setGender] = useState("");
+  const [mobile, setMobile] = useState("");
   const [cart, setCart] = useState([]);
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [orders, setOrders] = useState([]);
@@ -326,7 +328,7 @@ function App() {
   const handleRegister = async () => {
     setRegisterError("");
     // Basic validation
-    if (!name || !email || !password) {
+    if (!name || !email || !password || !gender || !mobile) {
       setRegisterError("All fields are required.");
       return;
     }
@@ -334,11 +336,15 @@ function App() {
       setRegisterError("Invalid email format.");
       return;
     }
+    if (!/^\d{10}$/.test(mobile)) {
+      setRegisterError("Mobile number must be 10 digits.");
+      return;
+    }
     try {
       const response = await fetch("http://localhost:8080/api/users/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name, email, password, gender, mobile }),
       });
       if (!response.ok) throw new Error("Registration failed");
       await response.json();
@@ -492,6 +498,13 @@ function App() {
           <div style={authStyles.divider}></div>
           <h3>Create Account</h3>
           <input style={authStyles.input} placeholder="Name" onChange={(e) => setName(e.target.value)} />
+          <select style={authStyles.input} value={gender} onChange={e => setGender(e.target.value)}>
+            <option value="">Gender</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+            <option value="other">Other</option>
+          </select>
+          <input style={authStyles.input} placeholder="Mobile Number" onChange={(e) => setMobile(e.target.value)} maxLength={10} />
           <input style={authStyles.input} placeholder="Email" onChange={(e) => setEmail(e.target.value)} />
           <input style={authStyles.input} type="password" placeholder="Password" onChange={(e) => setPassword(e.target.value)} />
           <button style={authStyles.registerBtn} onClick={handleRegister}>Register</button>
