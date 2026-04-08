@@ -4,6 +4,7 @@ import ReviewPage from "./ReviewPage";
 import TestimonialsPage from "./TestimonialsPage";
 import ContactUsPage from "./ContactUsPage";
 import CheckoutForm from "./CheckoutForm";
+import SalePage from "./SalePage";
 // ...existing code...
 
 // Utility to get absolute image URL
@@ -212,6 +213,32 @@ function AdminProductManager({ products, fetchProducts }) {
 }
 
 function App() {
+        // Fetch all products once for filter options
+        useEffect(() => {
+          const fetchAll = async () => {
+            try {
+              const res = await fetch("http://localhost:8080/api/products");
+              const data = await res.json();
+              // Populate color and brand options
+              const uniqueColors = Array.from(new Set((Array.isArray(data) ? data : []).map(p => p.color).filter(Boolean)));
+              setColorOptions(["All", ...uniqueColors]);
+              const uniqueBrands = Array.from(new Set((Array.isArray(data) ? data : []).map(p => p.brand).filter(Boolean)));
+              setBrandOptions(["All", ...uniqueBrands]);
+              // Populate category options
+              const uniqueCategories = Array.from(new Set((Array.isArray(data) ? data : []).map(p => p.category && p.category.name).filter(Boolean)));
+              setCategoryOptions(["All", ...uniqueCategories]);
+            } catch (err) {
+              setColorOptions(["All"]);
+              setBrandOptions(["All"]);
+              setCategoryOptions(["All"]);
+            }
+          };
+          fetchAll();
+          // Listen for refreshAllProducts event to update filter options after product changes
+          const handler = () => fetchAll();
+          window.addEventListener('refreshAllProducts', handler);
+          return () => window.removeEventListener('refreshAllProducts', handler);
+        }, []);
       const [showForgotPassword, setShowForgotPassword] = useState(false);
       const [forgotEmail, setForgotEmail] = useState("");
       const [forgotMessage, setForgotMessage] = useState("");
@@ -250,6 +277,8 @@ function App() {
   const [filterRating, setFilterRating] = useState("All");
   const [brandOptions, setBrandOptions] = useState([]);
   const [colorOptions, setColorOptions] = useState([]);
+  const [categoryOptions, setCategoryOptions] = useState([]);
+  const [filterCategory, setFilterCategory] = useState("All");
 
   // Unified fetchProducts: always uses all filters and search
   const fetchProducts = async (paramsOverride = {}) => {
@@ -258,6 +287,7 @@ function App() {
       color: filterColor && filterColor !== "All" ? filterColor : null,
       brand: filterBrand && filterBrand !== "All" ? filterBrand : null,
       rating: filterRating && filterRating !== "All" ? parseInt(filterRating) : null,
+        category: filterCategory && filterCategory !== "All" ? filterCategory : null,
       ...paramsOverride
     };
     const hasAny = Object.values(params).some(v => v && v !== "");
@@ -304,32 +334,11 @@ function App() {
   }, [search, filterColor, filterBrand, filterRating]);
 
   // Fetch all products once for filter options
-  const [allProducts, setAllProducts] = useState([]);
+  // Removed allProducts state from outside App
 
-  useEffect(() => {
-    const fetchAll = async () => {
-      try {
-        const res = await fetch("http://localhost:8080/api/products");
-        const data = await res.json();
-        setAllProducts(Array.isArray(data) ? data : []);
-      } catch (err) {
-        setAllProducts([]);
-      }
-    };
-    fetchAll();
-    // Listen for refreshAllProducts event to update filter options after product changes
-    const handler = () => fetchAll();
-    window.addEventListener('refreshAllProducts', handler);
-    return () => window.removeEventListener('refreshAllProducts', handler);
-  }, []);
+  // Removed useEffect for allProducts from outside App
 
-  // Update color and brand options from allProducts
-  useEffect(() => {
-    const uniqueColors = Array.from(new Set(allProducts.map(p => p.color).filter(Boolean)));
-    setColorOptions(["All", ...uniqueColors]);
-    const uniqueBrands = Array.from(new Set(allProducts.map(p => p.brand).filter(Boolean)));
-    setBrandOptions(["All", ...uniqueBrands]);
-  }, [allProducts]);
+  // Removed color and brand options update from outside App
 
   const handleRegister = async () => {
     setRegisterError("");
@@ -554,7 +563,7 @@ function App() {
       <nav style={{ marginBottom: 20, display: 'flex', gap: 8, alignItems: 'center' }}>
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={() => setPage("home")}>Home</button>
-          {/* <button onClick={() => setPage("new")}>New Products</button> */}
+          <button onClick={() => setPage("sale")}>Sale</button>
           <button onClick={() => setPage("reviews")}>Reviews</button>
           <button onClick={() => setPage("testimonials")}>Testimonials</button>
           <button onClick={() => setPage("contact")}>Contact Us</button>
@@ -568,232 +577,233 @@ function App() {
             {page === "admin" && user && user.isAdmin && (
               <AdminProductManager products={products} fetchProducts={fetchProducts} />
             )}
-      {/* {page === "new" && <NewProductsPage />} */}
-      {page === "reviews" && <ReviewPage user={user} />}
-      {page === "testimonials" && <TestimonialsPage />}
-      {page === "contact" && <ContactUsPage user={user} />}
-      {page === "home" && (
-        <>
-          {/* Search & Filters - Professional Layout */}
-          <div style={{ display: "flex", gap: 24, marginBottom: 24, flexWrap: "wrap", alignItems: "flex-end" }}>
-            <div style={{ flex: 1, minWidth: 220 }}>
-              <label style={{ fontWeight: 600 }}>Search</label>
-              <input
-                style={styles.search}
-                placeholder="Search products..."
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-              />
-            </div>
-            {/* Wrap filter controls in a fragment to avoid adjacent JSX error */}
-            <>
-              <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-                <div>
-                  <label style={{ fontWeight: 600 }}>Color</label>
-                  <select
-                    style={styles.search}
-                    value={filterColor}
-                    onChange={e => setFilterColor(e.target.value)}
+            {page === "sale" && <SalePage />}
+            {page === "reviews" && <ReviewPage user={user} />}
+            {page === "testimonials" && <TestimonialsPage />}
+            {page === "contact" && <ContactUsPage user={user} />}
+            {page === "home" && (
+              <>
+                {/* Search & Filters - Professional Layout */}
+                <div style={{ display: "flex", gap: 24, marginBottom: 24, flexWrap: "wrap", alignItems: "flex-end" }}>
+                  <div style={{ flex: 1, minWidth: 220 }}>
+                    <label style={{ fontWeight: 600 }}>Search</label>
+                    <input
+                      style={styles.search}
+                      placeholder="Search products..."
+                      value={search}
+                      onChange={e => setSearch(e.target.value)}
+                    />
+                  </div>
+                  {/* Wrap filter controls in a fragment to avoid adjacent JSX error */}
+                  <>
+                    <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                      <div>
+                        <label style={{ fontWeight: 600 }}>Color</label>
+                        <select
+                          style={styles.search}
+                          value={filterColor}
+                          onChange={e => setFilterColor(e.target.value)}
+                        >
+                          {colorOptions.map((color) => (
+                            <option key={color} value={color}>{color}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label style={{ fontWeight: 600 }}>Brand</label>
+                        <select
+                          style={styles.search}
+                          value={filterBrand}
+                          onChange={e => setFilterBrand(e.target.value)}
+                        >
+                          {brandOptions.map((brand) => (
+                            <option key={brand} value={brand}>{brand}</option>)
+                          )}
+                        </select>
+                      </div>
+                      <div>
+                        <label style={{ fontWeight: 600 }}>Rating</label>
+                        <select
+                          style={styles.search}
+                          value={filterRating}
+                          onChange={e => setFilterRating(e.target.value)}
+                        >
+                          <option value="All">All</option>
+                          {[1,2,3,4,5].map(r => <option key={r} value={r}>{r}</option>)}
+                        </select>
+                      </div>
+                    </div>
+                  </>
+                  <button
+                    style={{ height: 40, alignSelf: "center" }}
+                    onClick={() => {
+                      setFilterColor("All");
+                      setFilterBrand("All");
+                      setFilterRating("All");
+                      setSearch("");
+                    }}
                   >
-                    {colorOptions.map((color) => (
-                      <option key={color} value={color}>{color}</option>
-                    ))}
-                  </select>
+                    Clear All
+                  </button>
                 </div>
-                <div>
-                  <label style={{ fontWeight: 600 }}>Brand</label>
-                  <select
-                    style={styles.search}
-                    value={filterBrand}
-                    onChange={e => setFilterBrand(e.target.value)}
-                  >
-                    {brandOptions.map((brand) => (
-                      <option key={brand} value={brand}>{brand}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label style={{ fontWeight: 600 }}>Rating</label>
-                  <select
-                    style={styles.search}
-                    value={filterRating}
-                    onChange={e => setFilterRating(e.target.value)}
-                  >
-                    <option value="All">All</option>
-                    {[1,2,3,4,5].map(r => <option key={r} value={r}>{r}</option>)}
-                  </select>
-                </div>
-              </div>
-            </>
-            <button
-              style={{ height: 40, alignSelf: "center" }}
-              onClick={() => {
-                setFilterColor("All");
-                setFilterBrand("All");
-                setFilterRating("All");
-                setSearch("");
-              }}
-            >
-              Clear All
-            </button>
-          </div>
 
-      {/* Product Grid */}
-      {/* Sorting Controls */}
-      <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginBottom: 16 }}>
-        <label style={{ fontWeight: 600 }}>Sort By:</label>
-        <select value={sortBy} onChange={e => setSortBy(e.target.value)} style={styles.search}>
-          <option value="">None</option>
-          <option value="availability">Availability</option>
-          <option value="price">Price</option>
-          <option value="rating">Rating</option>
-          <option value="color">Color</option>
-          <option value="brand">Brand</option>
-        </select>
-        <select value={sortOrder} onChange={e => setSortOrder(e.target.value)} style={styles.search}>
-          <option value="asc">Ascending</option>
-          <option value="desc">Descending</option>
-        </select>
-      </div>
+                {/* Product Grid */}
+                {/* Sorting Controls */}
+                <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginBottom: 16 }}>
+                  <label style={{ fontWeight: 600 }}>Sort By:</label>
+                  <select value={sortBy} onChange={e => setSortBy(e.target.value)} style={styles.search}>
+                    <option value="">None</option>
+                    <option value="availability">Availability</option>
+                    <option value="price">Price</option>
+                    <option value="rating">Rating</option>
+                    <option value="color">Color</option>
+                    <option value="brand">Brand</option>
+                  </select>
+                  <select value={sortOrder} onChange={e => setSortOrder(e.target.value)} style={styles.search}>
+                    <option value="asc">Ascending</option>
+                    <option value="desc">Descending</option>
+                  </select>
+                </div>
 
-      <div style={styles.productGrid}>
-        {Array.isArray(products) && [...products]
-          .sort((a, b) => {
-            if (!sortBy) return 0;
-            let valA, valB;
-            switch (sortBy) {
-              case "availability":
-                valA = a.stock > 0 ? 1 : 0;
-                valB = b.stock > 0 ? 1 : 0;
-                break;
-              case "price":
-                valA = a.price || 0;
-                valB = b.price || 0;
-                break;
-              case "rating":
-                valA = a.rating || 0;
-                valB = b.rating || 0;
-                break;
-              case "color":
-                valA = a.color ? a.color.toLowerCase() : "";
-                valB = b.color ? b.color.toLowerCase() : "";
-                break;
-              case "brand":
-                valA = a.brand ? a.brand.toLowerCase() : "";
-                valB = b.brand ? b.brand.toLowerCase() : "";
-                break;
-              default:
-                return 0;
-            }
-            if (valA < valB) return sortOrder === "asc" ? -1 : 1;
-            if (valA > valB) return sortOrder === "asc" ? 1 : -1;
-            return 0;
-          })
-          .map((product) => {
-            if (!product || typeof product !== 'object' || !product.id) return null;
-            const hasDiscount = product.discount && product.discount > 0;
-            const discountedPrice = hasDiscount && product.price
-              ? (product.price * (1 - product.discount / 100)).toFixed(2)
-              : product.price;
-            return (
-              <div
-                key={product.id}
-                style={styles.card}
-                onClick={() => handleProductClick(product.id)}
-              >
-                {product.imageUrl && (
-                  <img src={getImageUrl(product.imageUrl)} alt={product.name} style={{ width: '100%', maxHeight: 140, objectFit: 'contain', borderRadius: 6, marginBottom: 8, background: '#f8f8f8' }} />
-                )}
-                <h4 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  {product.name || 'No Name'}
-                  {product.isNew && (
-                    <span style={{
-                      background: '#28a745',
-                      color: 'white',
-                      fontSize: '0.75em',
-                      fontWeight: 'bold',
-                      borderRadius: 4,
-                      padding: '2px 6px',
-                      marginLeft: 4
-                    }}>NEW</span>
-                  )}
-                </h4>
-                {product.color && (
-                  <div style={{ marginBottom: 4, color: '#555', fontSize: 14 }}>
-                    <strong>Color:</strong> {product.color}
+                <div style={styles.productGrid}>
+                  {Array.isArray(products) && [...products]
+                    .sort((a, b) => {
+                      if (!sortBy) return 0;
+                      let valA, valB;
+                      switch (sortBy) {
+                        case "availability":
+                          valA = a.stock > 0 ? 1 : 0;
+                          valB = b.stock > 0 ? 1 : 0;
+                          break;
+                        case "price":
+                          valA = a.price || 0;
+                          valB = b.price || 0;
+                          break;
+                        case "rating":
+                          valA = a.rating || 0;
+                          valB = b.rating || 0;
+                          break;
+                        case "color":
+                          valA = a.color ? a.color.toLowerCase() : "";
+                          valB = b.color ? b.color.toLowerCase() : "";
+                          break;
+                        case "brand":
+                          valA = a.brand ? a.brand.toLowerCase() : "";
+                          valB = b.brand ? b.brand.toLowerCase() : "";
+                          break;
+                        default:
+                          return 0;
+                      }
+                      if (valA < valB) return sortOrder === "asc" ? -1 : 1;
+                      if (valA > valB) return sortOrder === "asc" ? 1 : -1;
+                      return 0;
+                    })
+                    .map((product) => {
+                      if (!product || typeof product !== 'object' || !product.id) return null;
+                      const hasDiscount = product.discount && product.discount > 0;
+                      const discountedPrice = hasDiscount && product.price
+                        ? (product.price * (1 - product.discount / 100)).toFixed(2)
+                        : product.price;
+                      return (
+                        <div
+                          key={product.id}
+                          style={styles.card}
+                          onClick={() => handleProductClick(product.id)}
+                        >
+                          {product.imageUrl && (
+                            <img src={getImageUrl(product.imageUrl)} alt={product.name} style={{ width: '100%', maxHeight: 140, objectFit: 'contain', borderRadius: 6, marginBottom: 8, background: '#f8f8f8' }} />
+                          )}
+                          <h4 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            {product.name || 'No Name'}
+                            {product.isNew && (
+                              <span style={{
+                                background: '#28a745',
+                                color: 'white',
+                                fontSize: '0.75em',
+                                fontWeight: 'bold',
+                                borderRadius: 4,
+                                padding: '2px 6px',
+                                marginLeft: 4
+                              }}>NEW</span>
+                            )}
+                          </h4>
+                          {product.color && (
+                            <div style={{ marginBottom: 4, color: '#555', fontSize: 14 }}>
+                              <strong>Color:</strong> {product.color}
+                            </div>
+                          )}
+                          {hasDiscount && product.price ? (
+                            <>
+                              <span style={{ color: "#d9534f", fontWeight: "bold", marginRight: 8 }}>Sale</span>
+                              <p style={{ fontWeight: "bold", color: "#d9534f", margin: 0 }}>
+                                ₹{discountedPrice} <span style={{ textDecoration: "line-through", color: "#888", fontWeight: "normal", fontSize: 14 }}>₹{product.price}</span>
+                              </p>
+                            </>
+                          ) : (
+                            product.price && <p style={{ fontWeight: "bold" }}>₹{product.price}</p>
+                          )}
+                          {typeof product.stock === 'number' && (
+                            <p style={{ margin: 0, color: product.stock > 0 ? "green" : "red", fontWeight: "bold" }}>
+                              {product.stock > 0 ? `In Stock (${product.stock})` : "Out of Stock"}
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })}
+                </div>
+
+                {/* Product Details (moved below product grid) */}
+                {selectedProduct && typeof selectedProduct === 'object' && selectedProduct.id && (
+                  <div style={styles.detailsCard}>
+                    {selectedProduct.imageUrl && (
+                      <img src={getImageUrl(selectedProduct.imageUrl)} alt={selectedProduct.name} style={{ width: 220, maxHeight: 220, objectFit: 'contain', borderRadius: 8, marginBottom: 16, background: '#f8f8f8' }} />
+                    )}
+                    <h2>{selectedProduct.name || 'No Name'}</h2>
+                    {selectedProduct.discount && selectedProduct.discount > 0 && (
+                      <span style={{ color: "#d9534f", fontWeight: "bold", marginRight: 8 }}>Sale</span>
+                    )}
+                    {selectedProduct.color && (
+                      <div style={{ marginBottom: 4, color: '#555', fontSize: 15 }}>
+                        <strong>Color:</strong> {selectedProduct.color}
+                      </div>
+                    )}
+                    {selectedProduct.discount && selectedProduct.discount > 0 && selectedProduct.price ? (
+                      <p>
+                        <strong>Price:</strong> <span style={{ color: "#d9534f", fontWeight: "bold" }}>₹{((selectedProduct.price * (1 - selectedProduct.discount / 100))).toFixed(2)}</span>
+                        <span style={{ textDecoration: "line-through", color: "#888", fontWeight: "normal", fontSize: 16, marginLeft: 8 }}>₹{selectedProduct.price}</span>
+                      </p>
+                    ) : (
+                      selectedProduct.price && <p><strong>Price:</strong> ₹{selectedProduct.price}</p>
+                    )}
+                    {selectedProduct.description && <p><strong>Description:</strong> {selectedProduct.description}</p>}
+                    {typeof selectedProduct.stock === 'number' && (
+                      <p>
+                        <strong>Status:</strong>{" "}
+                        <span
+                          style={{
+                            color: selectedProduct.stock > 0 ? "green" : "red",
+                            fontWeight: "bold",
+                          }}
+                        >
+                          {selectedProduct.stock > 0 ? "In Stock" : "Out of Stock"}
+                        </span>
+                      </p>
+                    )}
+                    <button
+                      style={{
+                        ...styles.cartBtn,
+                        background: selectedProduct.stock > 0 ? styles.cartBtn.background : "#ccc",
+                        cursor: selectedProduct.stock > 0 ? "pointer" : "not-allowed",
+                      }}
+                      onClick={() => selectedProduct.stock > 0 && addToCart(selectedProduct)}
+                      disabled={selectedProduct.stock <= 0}
+                    >
+                      {selectedProduct.stock > 0 ? "Add to Cart" : "Out of Stock"}
+                    </button>
                   </div>
                 )}
-                {hasDiscount && product.price ? (
-                  <>
-                    <span style={{ color: "#d9534f", fontWeight: "bold", marginRight: 8 }}>Sale</span>
-                    <p style={{ fontWeight: "bold", color: "#d9534f", margin: 0 }}>
-                      ₹{discountedPrice} <span style={{ textDecoration: "line-through", color: "#888", fontWeight: "normal", fontSize: 14 }}>₹{product.price}</span>
-                    </p>
-                  </>
-                ) : (
-                  product.price && <p style={{ fontWeight: "bold" }}>₹{product.price}</p>
-                )}
-                {typeof product.stock === 'number' && (
-                  <p style={{ margin: 0, color: product.stock > 0 ? "green" : "red", fontWeight: "bold" }}>
-                    {product.stock > 0 ? `In Stock (${product.stock})` : "Out of Stock"}
-                  </p>
-                )}
-              </div>
-            );
-          })}
-      </div>
-
-      {/* Product Details (moved below product grid) */}
-      {selectedProduct && typeof selectedProduct === 'object' && selectedProduct.id && (
-        <div style={styles.detailsCard}>
-          {selectedProduct.imageUrl && (
-            <img src={getImageUrl(selectedProduct.imageUrl)} alt={selectedProduct.name} style={{ width: 220, maxHeight: 220, objectFit: 'contain', borderRadius: 8, marginBottom: 16, background: '#f8f8f8' }} />
-          )}
-          <h2>{selectedProduct.name || 'No Name'}</h2>
-          {selectedProduct.discount && selectedProduct.discount > 0 && (
-            <span style={{ color: "#d9534f", fontWeight: "bold", marginRight: 8 }}>Sale</span>
-          )}
-          {selectedProduct.color && (
-            <div style={{ marginBottom: 4, color: '#555', fontSize: 15 }}>
-              <strong>Color:</strong> {selectedProduct.color}
-            </div>
-          )}
-          {selectedProduct.discount && selectedProduct.discount > 0 && selectedProduct.price ? (
-            <p>
-              <strong>Price:</strong> <span style={{ color: "#d9534f", fontWeight: "bold" }}>₹{((selectedProduct.price * (1 - selectedProduct.discount / 100))).toFixed(2)}</span>
-              <span style={{ textDecoration: "line-through", color: "#888", fontWeight: "normal", fontSize: 16, marginLeft: 8 }}>₹{selectedProduct.price}</span>
-            </p>
-          ) : (
-            selectedProduct.price && <p><strong>Price:</strong> ₹{selectedProduct.price}</p>
-          )}
-          {selectedProduct.description && <p><strong>Description:</strong> {selectedProduct.description}</p>}
-          {typeof selectedProduct.stock === 'number' && (
-            <p>
-              <strong>Status:</strong>{" "}
-              <span
-                style={{
-                  color: selectedProduct.stock > 0 ? "green" : "red",
-                  fontWeight: "bold",
-                }}
-              >
-                {selectedProduct.stock > 0 ? "In Stock" : "Out of Stock"}
-              </span>
-            </p>
-          )}
-
-          <button
-            style={{
-              ...styles.cartBtn,
-              background: selectedProduct.stock > 0 ? styles.cartBtn.background : "#ccc",
-              cursor: selectedProduct.stock > 0 ? "pointer" : "not-allowed",
-            }}
-            onClick={() => selectedProduct.stock > 0 && addToCart(selectedProduct)}
-            disabled={selectedProduct.stock <= 0}
-          >
-            {selectedProduct.stock > 0 ? "Add to Cart" : "Out of Stock"}
-          </button>
-        </div>
-      )}
+              </>
+            )}
 
       {/* Product Details (duplicate removed) */}
 
@@ -925,8 +935,6 @@ function App() {
           )}
         </div>
       )}
-      </> 
-      )}
     </div>
   );
 }
@@ -1046,6 +1054,7 @@ cursor: "pointer",
 },
 
 };
+  // Removed uniqueCategories and setCategoryOptions from outside App
 
 const authStyles = {
 container: {
