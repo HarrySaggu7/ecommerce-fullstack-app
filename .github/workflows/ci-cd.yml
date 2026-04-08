@@ -45,6 +45,6 @@ jobs:
 
       - name: Build Frontend
         working-directory: frontend
-        run: npm run build
+        run: CI='' npm run build
 
       # Add deployment steps here (to Azure, AWS, etc.)
