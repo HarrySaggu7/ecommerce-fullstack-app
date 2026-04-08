@@ -2,6 +2,7 @@ package com.ecommerce.backend.order;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -19,13 +20,11 @@ public class OrderController {
         return orderService.placeOrder(order);
     }
 
-    @GetMapping("/user/{userId}")
-    public List<Order> getOrdersByUser(@PathVariable Long userId) {
-        return orderService.getOrdersByUser(userId);
-    }
-
+    /**
+     * Get orders for the currently logged-in user.
+     */
     @GetMapping
-    public List<Order> getAllOrders() {
-        return orderService.getAllOrders();
+    public List<Order> getOrdersForCurrentUser(Principal principal) {
+        return orderService.getOrdersByUserEmail(principal.getName());
     }
 }

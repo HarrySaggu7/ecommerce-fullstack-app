@@ -239,10 +239,14 @@ function App() {
           window.addEventListener('refreshAllProducts', handler);
           return () => window.removeEventListener('refreshAllProducts', handler);
         }, []);
-      const [showForgotPassword, setShowForgotPassword] = useState(false);
-      const [forgotEmail, setForgotEmail] = useState("");
-      const [forgotMessage, setForgotMessage] = useState("");
-    const [rememberMe, setRememberMe] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotMessage, setForgotMessage] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
+  // Token state for authentication
+  const [token, setToken] = useState(() => {
+    return localStorage.getItem("token") || sessionStorage.getItem("token") || null;
+  });
   // Sorting state
   const [sortBy, setSortBy] = useState("");
   const [sortOrder, setSortOrder] = useState("asc"); // asc or desc
@@ -315,9 +319,11 @@ function App() {
   };
 
   const fetchOrders = async () => {
-    if (!user || !user.id) return;
+    if (!user || !token) return;
     try {
-      const response = await fetch(`http://localhost:8080/api/orders/user/${user.id}`);
+      const response = await fetch("http://localhost:8080/api/orders", {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
       if (!response.ok) throw new Error("Failed to fetch orders");
       const data = await response.json();
       setOrders(Array.isArray(data) ? data : []);
@@ -330,8 +336,8 @@ function App() {
   useEffect(() => {
     fetchProducts();
     if (user && user.id) fetchOrders();
-    // eslint-disable-next-line
-  }, [search, filterColor, filterBrand, filterRating, filterCategory]);
+    // Now also refetch orders when user or token changes
+  }, [search, filterColor, filterBrand, filterRating, filterCategory, user, token]);
 
   // Fetch all products once for filter options
   // Removed allProducts state from outside App
@@ -388,19 +394,20 @@ function App() {
       });
       if (!response.ok) throw new Error("Login failed");
       const data = await response.json();
-      // Add isAdmin property for frontend admin check
-      let userObj;
-      if (data && data.role && data.role.toUpperCase() === "ADMIN") {
-        userObj = { ...data, isAdmin: true };
-      } else {
-        userObj = { ...data, isAdmin: false };
-      }
+      // data = { user: {...}, token: "..." }
+      const userObj = data.user;
+      userObj.isAdmin = userObj.role && userObj.role.toUpperCase() === "ADMIN";
       setUser(userObj);
+      setToken(data.token);
       if (rememberMe) {
         localStorage.setItem("user", JSON.stringify(userObj));
+        localStorage.setItem("token", data.token);
       } else {
         sessionStorage.setItem("user", JSON.stringify(userObj));
+        sessionStorage.setItem("token", data.token);
       }
+      // Fetch orders immediately after login
+      setTimeout(fetchOrders, 0);
     } catch (err) {
       console.error("Error logging in:", err);
       setLoginError("Login failed. Please try again.");
@@ -411,8 +418,10 @@ function App() {
     setUser(null);
     localStorage.removeItem("user");
     sessionStorage.removeItem("user");
+    setToken(null);
     setSelectedProduct(null);
     setOrderPlaced(false);
+    setOrders([]);
   };
 
   const handleProductClick = async (id) => {

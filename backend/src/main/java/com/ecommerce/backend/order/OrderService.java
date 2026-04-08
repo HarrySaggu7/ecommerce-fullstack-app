@@ -79,11 +79,9 @@ public class OrderService {
         return savedOrder;
     }
 
-    public List<Order> getOrdersByUser(Long userId) {
-        return orderRepository.findByUserId(userId);
-    }
-
-    public List<Order> getAllOrders() {
-        return orderRepository.findAll();
+    public List<Order> getOrdersByUserEmail(String email) {
+        com.ecommerce.backend.user.User user = userRepository.findByEmail(email);
+        if (user == null) return java.util.Collections.emptyList();
+        return orderRepository.findByUserId(user.getId());
     }
 }
