@@ -834,136 +834,140 @@ function App() {
 
       {/* Product Details (duplicate removed) */}
 
-      {/* Cart Section */}
-      <div style={styles.cartBox}>
-        <h3>🛒 Cart</h3>
-        {cart.length === 0 ? (
-          <p>No items in cart</p>
-        ) : (
-          <>
-            {cart.map((item) => (
-              <div key={item.id} style={styles.cartItem}>
-                <div>
-                  <strong>{item.name}</strong> <p>₹{item.price}</p>
-                </div>
-                <div style={styles.qtyControls}>
-                  <button onClick={() => decreaseQty(item.id)}>-</button>
-                  <span>{item.quantity}</span>
-                  <button onClick={() => increaseQty(item.id)}>+</button>
-                </div>
-                <button
-                  style={styles.removeBtn}
-                  onClick={() => removeItem(item.id)}
-                >
-                  Remove
-                </button>
-              </div>
-            ))}
-            <h3 style={{ marginTop: "15px" }}>
-              Total: ₹{totalPrice}
-            </h3>
-            {!showCheckoutForm && !checkoutAddresses && (
-              <button style={{ marginTop: 16 }} onClick={handleCheckout}>Checkout</button>
-            )}
-          </>
-        )}
-        {/* Show checkout form below cart summary if in checkout */}
-        {showCheckoutForm && <CheckoutForm onSubmit={handleAddressSubmit} />}
-        {/* Show address/payment summary if in that step */}
-        {checkoutAddresses && !showCheckoutForm && (
-          <>
-            <div style={{ marginBottom: 16, display: 'flex', gap: 24, flexWrap: 'wrap' }}>
-              <div style={{ border: '1px solid #eee', borderRadius: 8, padding: 16, minWidth: 260, background: '#fafbfc' }}>
-                <h4 style={{ marginTop: 0, marginBottom: 8 }}>Billing Address</h4>
-                <div><strong>Name:</strong> {checkoutAddresses.billingAddress.fullName}</div>
-                <div><strong>Street:</strong> {checkoutAddresses.billingAddress.street}</div>
-                <div><strong>City:</strong> {checkoutAddresses.billingAddress.city}</div>
-                <div><strong>State:</strong> {checkoutAddresses.billingAddress.state}</div>
-                <div><strong>Postal Code:</strong> {checkoutAddresses.billingAddress.postalCode}</div>
-                <div><strong>Country:</strong> {checkoutAddresses.billingAddress.country}</div>
-                <div><strong>Phone:</strong> {checkoutAddresses.billingAddress.phoneNumber}</div>
-              </div>
-              <div style={{ border: '1px solid #eee', borderRadius: 8, padding: 16, minWidth: 260, background: '#fafbfc' }}>
-                <h4 style={{ marginTop: 0, marginBottom: 8 }}>Shipping Address</h4>
-                <div><strong>Name:</strong> {checkoutAddresses.shippingAddress.fullName}</div>
-                <div><strong>Street:</strong> {checkoutAddresses.shippingAddress.street}</div>
-                <div><strong>City:</strong> {checkoutAddresses.shippingAddress.city}</div>
-                <div><strong>State:</strong> {checkoutAddresses.shippingAddress.state}</div>
-                <div><strong>Postal Code:</strong> {checkoutAddresses.shippingAddress.postalCode}</div>
-                <div><strong>Country:</strong> {checkoutAddresses.shippingAddress.country}</div>
-                <div><strong>Phone:</strong> {checkoutAddresses.shippingAddress.phoneNumber}</div>
-              </div>
-            </div>
-            <div style={{ margin: "20px 0" }}>
-              <PayPalButton
-                key={totalPrice}
-                total={totalPrice}
-                onSuccess={async (payment) => {
-                  if (!user || !user.id) {
-                    alert("You must be logged in to place an order.");
-                    return;
-                  }
-                  const orderPayload = {
-                    user: { id: user.id },
-                    products: cart.map(({ id }) => ({ id })),
-                    total: totalPrice,
-                    status: "PAID",
-                    createdAt: new Date().toISOString(),
-                    paymentId: payment.id,
-                    billingAddress: checkoutAddresses.billingAddress,
-                    shippingAddress: checkoutAddresses.shippingAddress
-                  };
-                  const response = await fetch("http://localhost:8080/api/orders", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(orderPayload),
-                  });
-                  if (response.ok) {
-                    setOrderPlaced(true);
-                    setCart([]);
-                    setCheckoutAddresses(null);
-                    fetchOrders();
-                  } else {
-                    alert("Order failed. Please try again.");
-                  }
-                }}
-              />
-            </div>
-          </>
-        )}
-        {orderPlaced && (
-          <div style={styles.successBox}>
-            <h2>✅ Order Placed Successfully!</h2>
-            <p>Thank you for your purchase.</p>
-          </div>
-        )}
-      </div>
-
-      {user && !user.guest && (
-        <div style={styles.cartBox}>
-          <h3>📦 Order History</h3>
-          {orders.length === 0 ? (
-            <p>No past orders found.</p>
-          ) : (
-            [...orders]
-              .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-              .map((order) => (
-                <div key={order.id} style={{ marginBottom: 16, borderBottom: "1px solid #eee", paddingBottom: 8 }}>
-                  <div><strong>Order #{order.id}</strong> | {order.status} | {new Date(order.createdAt).toLocaleString()}</div>
-                  <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', margin: '8px 0' }}>
-                    {order.products && order.products.map((p) => (
-                      <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#fafbfc', borderRadius: 6, padding: '4px 10px', border: '1px solid #eee', minWidth: 120 }}>
-                        {p.imageUrl && (
-                          <img src={getImageUrl(p.imageUrl)} alt={p.name} style={{ width: 40, height: 40, objectFit: 'contain', borderRadius: 4, background: '#fff', border: '1px solid #ddd' }} />
-                        )}
-                        <span>{p.name}</span>
-                      </div>
-                    ))}
+      {/* Cart and Order History only for Home and Sale tabs */}
+      {(page === "home" || page === "sale") && (
+        <>
+          <div style={styles.cartBox}>
+            <h3>🛒 Cart</h3>
+            {cart.length === 0 ? (
+              <p>No items in cart</p>
+            ) : (
+              <>
+                {cart.map((item) => (
+                  <div key={item.id} style={styles.cartItem}>
+                    <div>
+                      <strong>{item.name}</strong> <p>₹{item.price}</p>
+                    </div>
+                    <div style={styles.qtyControls}>
+                      <button onClick={() => decreaseQty(item.id)}>-</button>
+                      <span>{item.quantity}</span>
+                      <button onClick={() => increaseQty(item.id)}>+</button>
+                    </div>
+                    <button
+                      style={styles.removeBtn}
+                      onClick={() => removeItem(item.id)}
+                    >
+                      Remove
+                    </button>
                   </div>
-                  <div>Total: ₹{order.total}</div>
+                ))}
+                <h3 style={{ marginTop: "15px" }}>
+                  Total: ₹{totalPrice}
+                </h3>
+                {!showCheckoutForm && !checkoutAddresses && (
+                  <button style={{ marginTop: 16 }} onClick={handleCheckout}>Checkout</button>
+                )}
+              </>
+            )}
+            {/* Show checkout form below cart summary if in checkout */}
+            {showCheckoutForm && <CheckoutForm onSubmit={handleAddressSubmit} />}
+            {/* Show address/payment summary if in that step */}
+            {checkoutAddresses && !showCheckoutForm && (
+              <>
+                <div style={{ marginBottom: 16, display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+                  <div style={{ border: '1px solid #eee', borderRadius: 8, padding: 16, minWidth: 260, background: '#fafbfc' }}>
+                    <h4 style={{ marginTop: 0, marginBottom: 8 }}>Billing Address</h4>
+                    <div><strong>Name:</strong> {checkoutAddresses.billingAddress.fullName}</div>
+                    <div><strong>Street:</strong> {checkoutAddresses.billingAddress.street}</div>
+                    <div><strong>City:</strong> {checkoutAddresses.billingAddress.city}</div>
+                    <div><strong>State:</strong> {checkoutAddresses.billingAddress.state}</div>
+                    <div><strong>Postal Code:</strong> {checkoutAddresses.billingAddress.postalCode}</div>
+                    <div><strong>Country:</strong> {checkoutAddresses.billingAddress.country}</div>
+                    <div><strong>Phone:</strong> {checkoutAddresses.billingAddress.phoneNumber}</div>
+                  </div>
+                  <div style={{ border: '1px solid #eee', borderRadius: 8, padding: 16, minWidth: 260, background: '#fafbfc' }}>
+                    <h4 style={{ marginTop: 0, marginBottom: 8 }}>Shipping Address</h4>
+                    <div><strong>Name:</strong> {checkoutAddresses.shippingAddress.fullName}</div>
+                    <div><strong>Street:</strong> {checkoutAddresses.shippingAddress.street}</div>
+                    <div><strong>City:</strong> {checkoutAddresses.shippingAddress.city}</div>
+                    <div><strong>State:</strong> {checkoutAddresses.shippingAddress.state}</div>
+                    <div><strong>Postal Code:</strong> {checkoutAddresses.shippingAddress.postalCode}</div>
+                    <div><strong>Country:</strong> {checkoutAddresses.shippingAddress.country}</div>
+                    <div><strong>Phone:</strong> {checkoutAddresses.shippingAddress.phoneNumber}</div>
+                  </div>
                 </div>
-              ))
+                <div style={{ margin: "20px 0" }}>
+                  <PayPalButton
+                    key={totalPrice}
+                    total={totalPrice}
+                    onSuccess={async (payment) => {
+                      if (!user || !user.id) {
+                        alert("You must be logged in to place an order.");
+                        return;
+                      }
+                      const orderPayload = {
+                        user: { id: user.id },
+                        products: cart.map(({ id }) => ({ id })),
+                        total: totalPrice,
+                        status: "PAID",
+                        createdAt: new Date().toISOString(),
+                        paymentId: payment.id,
+                        billingAddress: checkoutAddresses.billingAddress,
+                        shippingAddress: checkoutAddresses.shippingAddress
+                      };
+                      const response = await fetch("http://localhost:8080/api/orders", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(orderPayload),
+                      });
+                      if (response.ok) {
+                        setOrderPlaced(true);
+                        setCart([]);
+                        setCheckoutAddresses(null);
+                        fetchOrders();
+                      } else {
+                        alert("Order failed. Please try again.");
+                      }
+                    }}
+                  />
+                </div>
+              </>
+            )}
+          </div>
+          {/* Order History only for logged in users (not guest) */}
+          {user && !user.guest && (
+            <div style={styles.cartBox}>
+              <h3>📦 Order History</h3>
+              {orders.length === 0 ? (
+                <p>No past orders found.</p>
+              ) : (
+                [...orders]
+                  .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                  .map((order) => (
+                    <div key={order.id} style={{ marginBottom: 16, borderBottom: "1px solid #eee", paddingBottom: 8 }}>
+                      <div><strong>Order #{order.id}</strong> | {order.status} | {new Date(order.createdAt).toLocaleString()}</div>
+                      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', margin: '8px 0' }}>
+                        {order.products && order.products.map((p) => (
+                          <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#fafbfc', borderRadius: 6, padding: '4px 10px', border: '1px solid #eee', minWidth: 120 }}>
+                            {p.imageUrl && (
+                              <img src={getImageUrl(p.imageUrl)} alt={p.name} style={{ width: 40, height: 40, objectFit: 'contain', borderRadius: 4, background: '#fff', border: '1px solid #ddd' }} />
+                            )}
+                            <span>{p.name}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div>Total: ₹{order.total}</div>
+                    </div>
+                  ))
+              )}
+            </div>
           )}
+        </>
+      )}
+      {orderPlaced && (
+        <div style={styles.successBox}>
+          <h2>✅ Order Placed Successfully!</h2>
+          <p>Thank you for your purchase.</p>
         </div>
       )}
     </div>
