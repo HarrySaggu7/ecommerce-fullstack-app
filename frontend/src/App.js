@@ -575,13 +575,13 @@ function App() {
     <div style={styles.container}>
       <nav style={{ marginBottom: 20, display: 'flex', gap: 8, alignItems: 'center' }}>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={() => setPage("home")}>Home</button>
-          <button onClick={() => setPage("sale")}>Sale</button>
-          <button onClick={() => setPage("reviews")}>Reviews</button>
-          <button onClick={() => setPage("testimonials")}>Testimonials</button>
-          <button onClick={() => setPage("contact")}>Contact Us</button>
+          <button onClick={() => { setOrderPlaced(false); setPage("home"); }}>Home</button>
+          <button onClick={() => { setOrderPlaced(false); setPage("sale"); }}>Sale</button>
+          <button onClick={() => { setOrderPlaced(false); setPage("reviews"); }}>Reviews</button>
+          <button onClick={() => { setOrderPlaced(false); setPage("testimonials"); }}>Testimonials</button>
+          <button onClick={() => { setOrderPlaced(false); setPage("contact"); }}>Contact Us</button>
           {user && user.isAdmin && (
-            <button onClick={() => setPage("admin")}>Admin</button>
+            <button onClick={() => { setOrderPlaced(false); setPage("admin"); }}>Admin</button>
           )}
         </div>
         <div style={{ flex: 1 }} />
