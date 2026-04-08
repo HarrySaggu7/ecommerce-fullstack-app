@@ -5,7 +5,7 @@ const getImageUrl = (url) =>
     ? `http://localhost:8080${url}`
     : url;
 
-export default function SalePage() {
+export default function SalePage({ onProductClick, selectedProduct, addToCart, styles, getImageUrl }) {
   const [categories, setCategories] = useState([]);
   const [productsByCategory, setProductsByCategory] = useState({});
   const [loading, setLoading] = useState(true);
@@ -51,7 +51,11 @@ export default function SalePage() {
           <h3 style={{ borderBottom: '1px solid #eee', paddingBottom: 4 }}>{cat.name}</h3>
           <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
             {productsByCategory[cat.id].map((product) => (
-              <div key={product.id} style={{ background: '#fff', border: '1px solid #eee', borderRadius: 8, padding: 16, width: 220, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+              <div
+                key={product.id}
+                style={{ background: '#fff', border: '1px solid #eee', borderRadius: 8, padding: 16, width: 220, boxShadow: '0 2px 8px rgba(0,0,0,0.04)', cursor: 'pointer' }}
+                onClick={() => onProductClick && onProductClick(product.id)}
+              >
                 {product.imageUrl && (
                   <img src={getImageUrl(product.imageUrl)} alt={product.name} style={{ width: '100%', maxHeight: 120, objectFit: 'contain', borderRadius: 6, marginBottom: 8, background: '#f8f8f8' }} />
                 )}
@@ -62,12 +66,62 @@ export default function SalePage() {
                 </div>
                 <div style={{ color: '#007bff', fontWeight: 500, fontSize: 14, margin: '4px 0' }}>-{product.discount}% OFF</div>
                 <div style={{ color: '#555', fontSize: 13 }}>{product.description}</div>
-                {/* Add to Cart, Quick View, Compare, Wishlist buttons can be added here */}
               </div>
             ))}
           </div>
         </div>
       ))}
+
+      {/* Product Details (same as App.js) */}
+      {selectedProduct && typeof selectedProduct === 'object' && selectedProduct.id && (
+        <div style={styles.detailsCard}>
+          {selectedProduct.imageUrl && (
+            <img src={getImageUrl(selectedProduct.imageUrl)} alt={selectedProduct.name} style={{ width: 220, maxHeight: 220, objectFit: 'contain', borderRadius: 8, marginBottom: 16, background: '#f8f8f8' }} />
+          )}
+          <h2>{selectedProduct.name || 'No Name'}</h2>
+          {selectedProduct.discount && selectedProduct.discount > 0 && (
+            <span style={{ color: "#d9534f", fontWeight: "bold", marginRight: 8 }}>Sale</span>
+          )}
+          {selectedProduct.color && (
+            <div style={{ marginBottom: 4, color: '#555', fontSize: 15 }}>
+              <strong>Color:</strong> {selectedProduct.color}
+            </div>
+          )}
+          {selectedProduct.discount && selectedProduct.discount > 0 && selectedProduct.price ? (
+            <p>
+              <strong>Price:</strong> <span style={{ color: "#d9534f", fontWeight: "bold" }}>₹{((selectedProduct.price * (1 - selectedProduct.discount / 100))).toFixed(2)}</span>
+              <span style={{ textDecoration: "line-through", color: "#888", fontWeight: "normal", fontSize: 16, marginLeft: 8 }}>₹{selectedProduct.price}</span>
+            </p>
+          ) : (
+            selectedProduct.price && <p><strong>Price:</strong> ₹{selectedProduct.price}</p>
+          )}
+          {selectedProduct.description && <p><strong>Description:</strong> {selectedProduct.description}</p>}
+          {typeof selectedProduct.stock === 'number' && (
+            <p>
+              <strong>Status:</strong>{' '}
+              <span
+                style={{
+                  color: selectedProduct.stock > 0 ? 'green' : 'red',
+                  fontWeight: 'bold',
+                }}
+              >
+                {selectedProduct.stock > 0 ? 'In Stock' : 'Out of Stock'}
+              </span>
+            </p>
+          )}
+          <button
+            style={{
+              ...styles.cartBtn,
+              background: selectedProduct.stock > 0 ? styles.cartBtn.background : '#ccc',
+              cursor: selectedProduct.stock > 0 ? 'pointer' : 'not-allowed',
+            }}
+            onClick={() => selectedProduct.stock > 0 && addToCart(selectedProduct)}
+            disabled={selectedProduct.stock <= 0}
+          >
+            {selectedProduct.stock > 0 ? 'Add to Cart' : 'Out of Stock'}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

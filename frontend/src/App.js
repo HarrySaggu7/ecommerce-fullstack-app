@@ -577,7 +577,15 @@ function App() {
             {page === "admin" && user && user.isAdmin && (
               <AdminProductManager products={products} fetchProducts={fetchProducts} />
             )}
-            {page === "sale" && <SalePage />}
+            {page === "sale" && (
+              <SalePage
+                onProductClick={handleProductClick}
+                selectedProduct={selectedProduct}
+                addToCart={addToCart}
+                styles={styles}
+                getImageUrl={getImageUrl}
+              />
+            )}
             {page === "reviews" && <ReviewPage user={user} />}
             {page === "testimonials" && <TestimonialsPage />}
             {page === "contact" && <ContactUsPage user={user} />}
