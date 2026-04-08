@@ -59,10 +59,11 @@ public class ProductController {
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String color,
             @RequestParam(required = false) String brand,
-            @RequestParam(required = false) Integer rating) {
+            @RequestParam(required = false) Integer rating,
+            @RequestParam(required = false) String category) {
         try {
-            System.out.println("[DEBUG] /filter called with: keyword='" + keyword + "', color='" + color + "', brand='" + brand + "', rating=" + rating);
-            return productService.filterProducts(keyword, color, brand, rating);
+            System.out.println("[DEBUG] /filter called with: keyword='" + keyword + "', color='" + color + "', brand='" + brand + "', rating=" + rating + ", category='" + category + "'");
+            return productService.filterProducts(keyword, color, brand, rating, category);
         } catch (Exception e) {
             e.printStackTrace();
             throw e;

@@ -331,7 +331,7 @@ function App() {
     fetchProducts();
     if (user && user.id) fetchOrders();
     // eslint-disable-next-line
-  }, [search, filterColor, filterBrand, filterRating]);
+  }, [search, filterColor, filterBrand, filterRating, filterCategory]);
 
   // Fetch all products once for filter options
   // Removed allProducts state from outside App
@@ -594,9 +594,21 @@ function App() {
                       onChange={e => setSearch(e.target.value)}
                     />
                   </div>
-                  {/* Wrap filter controls in a fragment to avoid adjacent JSX error */}
+                  {/* Filter controls including Category */}
                   <>
                     <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                      <div>
+                        <label style={{ fontWeight: 600 }}>Category</label>
+                        <select
+                          style={styles.search}
+                          value={filterCategory}
+                          onChange={e => setFilterCategory(e.target.value)}
+                        >
+                          {categoryOptions.map((cat) => (
+                            <option key={cat} value={cat}>{cat}</option>
+                          ))}
+                        </select>
+                      </div>
                       <div>
                         <label style={{ fontWeight: 600 }}>Color</label>
                         <select
