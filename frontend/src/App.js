@@ -666,90 +666,97 @@ function App() {
                 </div>
 
                 <div style={styles.productGrid}>
-                  {Array.isArray(products) && [...products]
-                    .sort((a, b) => {
-                      if (!sortBy) return 0;
-                      let valA, valB;
-                      switch (sortBy) {
-                        case "availability":
-                          valA = a.stock > 0 ? 1 : 0;
-                          valB = b.stock > 0 ? 1 : 0;
-                          break;
-                        case "price":
-                          valA = a.price || 0;
-                          valB = b.price || 0;
-                          break;
-                        case "rating":
-                          valA = a.rating || 0;
-                          valB = b.rating || 0;
-                          break;
-                        case "color":
-                          valA = a.color ? a.color.toLowerCase() : "";
-                          valB = b.color ? b.color.toLowerCase() : "";
-                          break;
-                        case "brand":
-                          valA = a.brand ? a.brand.toLowerCase() : "";
-                          valB = b.brand ? b.brand.toLowerCase() : "";
-                          break;
-                        default:
-                          return 0;
-                      }
-                      if (valA < valB) return sortOrder === "asc" ? -1 : 1;
-                      if (valA > valB) return sortOrder === "asc" ? 1 : -1;
-                      return 0;
-                    })
-                    .map((product) => {
-                      if (!product || typeof product !== 'object' || !product.id) return null;
-                      const hasDiscount = product.discount && product.discount > 0;
-                      const discountedPrice = hasDiscount && product.price
-                        ? (product.price * (1 - product.discount / 100)).toFixed(2)
-                        : product.price;
-                      return (
-                        <div
-                          key={product.id}
-                          style={styles.card}
-                          onClick={() => handleProductClick(product.id)}
-                        >
-                          {product.imageUrl && (
-                            <img src={getImageUrl(product.imageUrl)} alt={product.name} style={{ width: '100%', maxHeight: 140, objectFit: 'contain', borderRadius: 6, marginBottom: 8, background: '#f8f8f8' }} />
-                          )}
-                          <h4 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            {product.name || 'No Name'}
-                            {product.isNew && (
-                              <span style={{
-                                background: '#28a745',
-                                color: 'white',
-                                fontSize: '0.75em',
-                                fontWeight: 'bold',
-                                borderRadius: 4,
-                                padding: '2px 6px',
-                                marginLeft: 4
-                              }}>NEW</span>
+                  {Array.isArray(products) && products.length === 0 ? (
+                    <div style={{ gridColumn: '1/-1', textAlign: 'center', color: '#888', fontSize: 22, padding: 40 }}>
+                      <span role="img" aria-label="no products" style={{ fontSize: 40 }}>🛒</span>
+                      <div>No products found matching your filters.</div>
+                    </div>
+                  ) : (
+                    [...products]
+                      .sort((a, b) => {
+                        if (!sortBy) return 0;
+                        let valA, valB;
+                        switch (sortBy) {
+                          case "availability":
+                            valA = a.stock > 0 ? 1 : 0;
+                            valB = b.stock > 0 ? 1 : 0;
+                            break;
+                          case "price":
+                            valA = a.price || 0;
+                            valB = b.price || 0;
+                            break;
+                          case "rating":
+                            valA = a.rating || 0;
+                            valB = b.rating || 0;
+                            break;
+                          case "color":
+                            valA = a.color ? a.color.toLowerCase() : "";
+                            valB = b.color ? b.color.toLowerCase() : "";
+                            break;
+                          case "brand":
+                            valA = a.brand ? a.brand.toLowerCase() : "";
+                            valB = b.brand ? b.brand.toLowerCase() : "";
+                            break;
+                          default:
+                            return 0;
+                        }
+                        if (valA < valB) return sortOrder === "asc" ? -1 : 1;
+                        if (valA > valB) return sortOrder === "asc" ? 1 : -1;
+                        return 0;
+                      })
+                      .map((product) => {
+                        if (!product || typeof product !== 'object' || !product.id) return null;
+                        const hasDiscount = product.discount && product.discount > 0;
+                        const discountedPrice = hasDiscount && product.price
+                          ? (product.price * (1 - product.discount / 100)).toFixed(2)
+                          : product.price;
+                        return (
+                          <div
+                            key={product.id}
+                            style={styles.card}
+                            onClick={() => handleProductClick(product.id)}
+                          >
+                            {product.imageUrl && (
+                              <img src={getImageUrl(product.imageUrl)} alt={product.name} style={{ width: '100%', maxHeight: 140, objectFit: 'contain', borderRadius: 6, marginBottom: 8, background: '#f8f8f8' }} />
                             )}
-                          </h4>
-                          {product.color && (
-                            <div style={{ marginBottom: 4, color: '#555', fontSize: 14 }}>
-                              <strong>Color:</strong> {product.color}
-                            </div>
-                          )}
-                          {hasDiscount && product.price ? (
-                            <>
-                              <span style={{ color: "#d9534f", fontWeight: "bold", marginRight: 8 }}>Sale</span>
-                              <p style={{ fontWeight: "bold", color: "#d9534f", margin: 0 }}>
-                                ₹{discountedPrice} <span style={{ textDecoration: "line-through", color: "#888", fontWeight: "normal", fontSize: 14 }}>₹{product.price}</span>
+                            <h4 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              {product.name || 'No Name'}
+                              {product.isNew && (
+                                <span style={{
+                                  background: '#28a745',
+                                  color: 'white',
+                                  fontSize: '0.75em',
+                                  fontWeight: 'bold',
+                                  borderRadius: 4,
+                                  padding: '2px 6px',
+                                  marginLeft: 4
+                                }}>NEW</span>
+                              )}
+                            </h4>
+                            {product.color && (
+                              <div style={{ marginBottom: 4, color: '#555', fontSize: 14 }}>
+                                <strong>Color:</strong> {product.color}
+                              </div>
+                            )}
+                            {hasDiscount && product.price ? (
+                              <>
+                                <span style={{ color: "#d9534f", fontWeight: "bold", marginRight: 8 }}>Sale</span>
+                                <p style={{ fontWeight: "bold", color: "#d9534f", margin: 0 }}>
+                                  ₹{discountedPrice} <span style={{ textDecoration: "line-through", color: "#888", fontWeight: "normal", fontSize: 14 }}>₹{product.price}</span>
+                                </p>
+                              </>
+                            ) : (
+                              product.price && <p style={{ fontWeight: "bold" }}>₹{product.price}</p>
+                            )}
+                            {typeof product.stock === 'number' && (
+                              <p style={{ margin: 0, color: product.stock > 0 ? "green" : "red", fontWeight: "bold" }}>
+                                {product.stock > 0 ? `In Stock (${product.stock})` : "Out of Stock"}
                               </p>
-                            </>
-                          ) : (
-                            product.price && <p style={{ fontWeight: "bold" }}>₹{product.price}</p>
-                          )}
-                          {typeof product.stock === 'number' && (
-                            <p style={{ margin: 0, color: product.stock > 0 ? "green" : "red", fontWeight: "bold" }}>
-                              {product.stock > 0 ? `In Stock (${product.stock})` : "Out of Stock"}
-                            </p>
-                          )}
-                        </div>
-                      );
-                    })}
+                            )}
+                          </div>
+                        );
+                      })
+                  )}
                 </div>
 
                 {/* Product Details (moved below product grid) */}
@@ -812,9 +819,38 @@ function App() {
         <h3>🛒 Cart</h3>
         {cart.length === 0 ? (
           <p>No items in cart</p>
-        ) : showCheckoutForm ? (
-          <CheckoutForm onSubmit={handleAddressSubmit} />
-        ) : checkoutAddresses ? (
+        ) : (
+          <>
+            {cart.map((item) => (
+              <div key={item.id} style={styles.cartItem}>
+                <div>
+                  <strong>{item.name}</strong> <p>₹{item.price}</p>
+                </div>
+                <div style={styles.qtyControls}>
+                  <button onClick={() => decreaseQty(item.id)}>-</button>
+                  <span>{item.quantity}</span>
+                  <button onClick={() => increaseQty(item.id)}>+</button>
+                </div>
+                <button
+                  style={styles.removeBtn}
+                  onClick={() => removeItem(item.id)}
+                >
+                  Remove
+                </button>
+              </div>
+            ))}
+            <h3 style={{ marginTop: "15px" }}>
+              Total: ₹{totalPrice}
+            </h3>
+            {!showCheckoutForm && !checkoutAddresses && (
+              <button style={{ marginTop: 16 }} onClick={handleCheckout}>Checkout</button>
+            )}
+          </>
+        )}
+        {/* Show checkout form below cart summary if in checkout */}
+        {showCheckoutForm && <CheckoutForm onSubmit={handleAddressSubmit} />}
+        {/* Show address/payment summary if in that step */}
+        {checkoutAddresses && !showCheckoutForm && (
           <>
             <div style={{ marginBottom: 16, display: 'flex', gap: 24, flexWrap: 'wrap' }}>
               <div style={{ border: '1px solid #eee', borderRadius: 8, padding: 16, minWidth: 260, background: '#fafbfc' }}>
@@ -873,31 +909,6 @@ function App() {
                 }}
               />
             </div>
-          </>
-        ) : (
-          <>
-            {cart.map((item) => (
-              <div key={item.id} style={styles.cartItem}>
-                <div>
-                  <strong>{item.name}</strong> <p>₹{item.price}</p>
-                </div>
-                <div style={styles.qtyControls}>
-                  <button onClick={() => decreaseQty(item.id)}>-</button>
-                  <span>{item.quantity}</span>
-                  <button onClick={() => increaseQty(item.id)}>+</button>
-                </div>
-                <button
-                  style={styles.removeBtn}
-                  onClick={() => removeItem(item.id)}
-                >
-                  Remove
-                </button>
-              </div>
-            ))}
-            <h3 style={{ marginTop: "15px" }}>
-              Total: ₹{totalPrice}
-            </h3>
-            <button style={{ marginTop: 16 }} onClick={handleCheckout}>Checkout</button>
           </>
         )}
         {orderPlaced && (
