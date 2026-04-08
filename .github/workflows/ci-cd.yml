@@ -2,9 +2,9 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, story/ECommerce/GithubActionsSetup ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, story/ECommerce/GithubActionsSetup ]
 
 jobs:
   build:
