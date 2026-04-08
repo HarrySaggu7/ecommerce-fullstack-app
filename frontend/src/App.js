@@ -438,6 +438,10 @@ function App() {
 
   const addToCart = (product) => {
     const existing = cart.find((item) => item.id === product.id);
+    // Calculate discounted price if applicable
+    const finalPrice = product.discount && product.discount > 0 && product.price
+      ? parseFloat((product.price * (1 - product.discount / 100)).toFixed(2))
+      : product.price;
 
     if (existing) {
       setCart(
@@ -448,7 +452,7 @@ function App() {
         )
       );
     } else {
-      setCart([...cart, { ...product, quantity: 1 }]);
+      setCart([...cart, { ...product, quantity: 1, finalPrice }]);
     }
   };
 
@@ -475,7 +479,7 @@ function App() {
   };
 
   const totalPrice = cart.reduce(
-    (sum, item) => sum + item.price * item.quantity,
+    (sum, item) => sum + (item.finalPrice !== undefined ? item.finalPrice : item.price) * item.quantity,
     0
   );
 
@@ -855,7 +859,7 @@ function App() {
                 {cart.map((item) => (
                   <div key={item.id} style={styles.cartItem}>
                     <div>
-                      <strong>{item.name}</strong> <p>₹{item.price}</p>
+                      <strong>{item.name}</strong> <p>₹{item.finalPrice !== undefined ? item.finalPrice : item.price}</p>
                     </div>
                     <div style={styles.qtyControls}>
                       <button onClick={() => decreaseQty(item.id)}>-</button>
@@ -926,7 +930,10 @@ function App() {
                       };
                       const response = await fetch("http://localhost:8080/api/orders", {
                         method: "POST",
-                        headers: { "Content-Type": "application/json" },
+                        headers: {
+                          "Content-Type": "application/json",
+                          ...(token ? { "Authorization": `Bearer ${token}` } : {})
+                        },
                         body: JSON.stringify(orderPayload),
                       });
                       if (response.ok) {
