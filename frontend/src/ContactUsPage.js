@@ -1,6 +1,7 @@
+
+import React, { useState, useEffect } from 'react';
 // Use environment variable for API base URL
 const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
-import React, { useState, useEffect } from 'react';
 
 
 function ContactUsPage({ user }) {
