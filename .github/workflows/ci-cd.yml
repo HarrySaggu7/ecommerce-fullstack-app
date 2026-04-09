@@ -71,15 +71,31 @@ jobs:
       
 
 
-      - name: Deploy to Elastic Beanstalk
-        uses: einaregilsson/beanstalk-deploy@v20
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          application_name: ecommerce-backend
-          environment_name: ecommerce-backend-env
-          version_label: github-${{ github.run_number }}
-          region: eu-north-1
-          deployment_package: backend-deploy.zip
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: eu-north-1
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-north-1
+
+      - name: Install AWS CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y awscli
+
+      - name: Upload deployment package to S3
+        run: |
+          aws s3 cp backend-deploy.zip s3://elasticbeanstalk-eu-north-1-${{ secrets.AWS_ACCOUNT_ID }}/backend-deploy-${{ github.run_number }}.zip
+
+      - name: Create new application version
+        run: |
+          aws elasticbeanstalk create-application-version \
+            --application-name ecommerce-backend \
+            --version-label github-${{ github.run_number }} \
+            --source-bundle S3Bucket=elasticbeanstalk-eu-north-1-${{ secrets.AWS_ACCOUNT_ID }},S3Key=backend-deploy-${{ github.run_number }}.zip
+
+      - name: Update environment to new version
+        run: |
+          aws elasticbeanstalk update-environment \
+            --environment-name ecommerce-backend-env \
+            --version-label github-${{ github.run_number }}
