@@ -47,4 +47,38 @@ jobs:
         working-directory: frontend
         run: CI='' npm run build
 
-      # Add deployment steps here (to Azure, AWS, etc.)
+      deploy-backend:
+        needs: build
+        runs-on: ubuntu-latest
+        steps:
+          - name: Checkout code
+            uses: actions/checkout@v4
+
+          - name: Set up JDK 17
+            uses: actions/setup-java@v4
+            with:
+              distribution: 'temurin'
+              java-version: '17'
+
+          - name: Build Backend with Maven (skip tests)
+            working-directory: backend
+            run: ./mvnw clean package -DskipTests
+
+          - name: Generate deployment package (ZIP)
+            run: zip -r backend-deploy.zip backend/target/*.jar backend/.ebextensions || zip -r backend-deploy.zip backend/target/*.jar
+
+          - name: Configure AWS credentials
+            uses: aws-actions/configure-aws-credentials@v4
+            with:
+              aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+              aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+              aws-region: eu-north-1
+
+          - name: Deploy to Elastic Beanstalk
+            uses: einaregilsson/beanstalk-deploy@v21
+            with:
+              application_name: ecommerce-backend
+              environment_name: ecommerce-backend-env
+              version_label: github-${{ github.run_number }}
+              region: eu-north-1
+              deployment_package: backend-deploy.zip
