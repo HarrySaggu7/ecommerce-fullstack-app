@@ -1,7 +1,9 @@
+
 import React, { useEffect, useState } from "react";
 
 // Use environment variable for API base URL
 const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
+const formatUSD = (price) => price != null ? price.toLocaleString('en-US', { style: 'currency', currency: 'USD' }) : '';
 const getImageUrl = (url) =>
   url && url.startsWith('/api/products/image/')
     ? `${API_BASE_URL}${url}`
@@ -63,8 +65,8 @@ export default function SalePage({ onProductClick, selectedProduct, addToCart, s
                 )}
                 <h4 style={{ margin: '8px 0 4px 0' }}>{product.name}</h4>
                 <div style={{ color: '#d9534f', fontWeight: 'bold', fontSize: 18 }}>
-                  ₹{(product.price * (1 - product.discount / 100)).toFixed(2)}
-                  <span style={{ textDecoration: 'line-through', color: '#888', fontWeight: 'normal', fontSize: 14, marginLeft: 8 }}>₹{product.price}</span>
+                  {formatUSD(product.price * (1 - product.discount / 100))}
+                  <span style={{ textDecoration: 'line-through', color: '#888', fontWeight: 'normal', fontSize: 14, marginLeft: 8 }}>{formatUSD(product.price)}</span>
                 </div>
                 <div style={{ color: '#007bff', fontWeight: 500, fontSize: 14, margin: '4px 0' }}>-{product.discount}% OFF</div>
                 <div style={{ color: '#555', fontSize: 13 }}>{product.description}</div>
@@ -91,11 +93,11 @@ export default function SalePage({ onProductClick, selectedProduct, addToCart, s
           )}
           {selectedProduct.discount && selectedProduct.discount > 0 && selectedProduct.price ? (
             <p>
-              <strong>Price:</strong> <span style={{ color: "#d9534f", fontWeight: "bold" }}>₹{((selectedProduct.price * (1 - selectedProduct.discount / 100))).toFixed(2)}</span>
-              <span style={{ textDecoration: "line-through", color: "#888", fontWeight: "normal", fontSize: 16, marginLeft: 8 }}>₹{selectedProduct.price}</span>
+              <strong>Price:</strong> <span style={{ color: "#d9534f", fontWeight: "bold" }}>{formatUSD(selectedProduct.price * (1 - selectedProduct.discount / 100))}</span>
+              <span style={{ textDecoration: "line-through", color: "#888", fontWeight: "normal", fontSize: 16, marginLeft: 8 }}>{formatUSD(selectedProduct.price)}</span>
             </p>
           ) : (
-            selectedProduct.price && <p><strong>Price:</strong> ₹{selectedProduct.price}</p>
+            selectedProduct.price && <p><strong>Price:</strong> {formatUSD(selectedProduct.price)}</p>
           )}
           {selectedProduct.description && <p><strong>Description:</strong> {selectedProduct.description}</p>}
           {typeof selectedProduct.stock === 'number' && (

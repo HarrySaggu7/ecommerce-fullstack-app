@@ -8,8 +8,8 @@ import CheckoutForm from "./CheckoutForm";
 import SalePage from "./SalePage";
 // Use environment variable for API base URL
 const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
-// ...existing code...
-
+// Utility to format price in USD
+const formatUSD = (price) => price != null ? price.toLocaleString('en-US', { style: 'currency', currency: 'USD' }) : '';
 // Utility to get absolute image URL
 const getImageUrl = (url) =>
   url && url.startsWith('/api/products/image/')
@@ -196,7 +196,7 @@ function AdminProductManager({ products, fetchProducts }) {
                 )}
               </td>
               <td>{p.description}</td>
-              <td>₹{p.price}</td>
+              <td>{formatUSD(p.price)}</td>
               <td>{p.discount || 0}</td>
               <td>{p.stock || 0}</td>
               <td>{p.category ? p.category.name : ""}</td>
@@ -778,11 +778,11 @@ function App() {
                               <>
                                 <span style={{ color: "#d9534f", fontWeight: "bold", marginRight: 8 }}>Sale</span>
                                 <p style={{ fontWeight: "bold", color: "#d9534f", margin: 0 }}>
-                                  ₹{discountedPrice} <span style={{ textDecoration: "line-through", color: "#888", fontWeight: "normal", fontSize: 14 }}>₹{product.price}</span>
+                                  {formatUSD(discountedPrice)} <span style={{ textDecoration: "line-through", color: "#888", fontWeight: "normal", fontSize: 14 }}>{formatUSD(product.price)}</span>
                                 </p>
                               </>
                             ) : (
-                              product.price && <p style={{ fontWeight: "bold" }}>₹{product.price}</p>
+                              product.price && <p style={{ fontWeight: "bold" }}>{formatUSD(product.price)}</p>
                             )}
                             {typeof product.stock === 'number' && (
                               <p style={{ margin: 0, color: product.stock > 0 ? "green" : "red", fontWeight: "bold" }}>
@@ -812,11 +812,11 @@ function App() {
                     )}
                     {selectedProduct.discount && selectedProduct.discount > 0 && selectedProduct.price ? (
                       <p>
-                        <strong>Price:</strong> <span style={{ color: "#d9534f", fontWeight: "bold" }}>₹{((selectedProduct.price * (1 - selectedProduct.discount / 100))).toFixed(2)}</span>
-                        <span style={{ textDecoration: "line-through", color: "#888", fontWeight: "normal", fontSize: 16, marginLeft: 8 }}>₹{selectedProduct.price}</span>
+                        <strong>Price:</strong> <span style={{ color: "#d9534f", fontWeight: "bold" }}>{formatUSD((selectedProduct.price * (1 - selectedProduct.discount / 100)))}</span>
+                        <span style={{ textDecoration: "line-through", color: "#888", fontWeight: "normal", fontSize: 16, marginLeft: 8 }}>{formatUSD(selectedProduct.price)}</span>
                       </p>
                     ) : (
-                      selectedProduct.price && <p><strong>Price:</strong> ₹{selectedProduct.price}</p>
+                      selectedProduct.price && <p><strong>Price:</strong> {formatUSD(selectedProduct.price)}</p>
                     )}
                     {selectedProduct.description && <p><strong>Description:</strong> {selectedProduct.description}</p>}
                     {typeof selectedProduct.stock === 'number' && (
@@ -862,7 +862,7 @@ function App() {
                 {cart.map((item) => (
                   <div key={item.id} style={styles.cartItem}>
                     <div>
-                      <strong>{item.name}</strong> <p>₹{item.finalPrice !== undefined ? item.finalPrice : item.price}</p>
+                      <strong>{item.name}</strong> <p>{formatUSD(item.finalPrice !== undefined ? item.finalPrice : item.price)}</p>
                     </div>
                     <div style={styles.qtyControls}>
                       <button onClick={() => decreaseQty(item.id)}>-</button>
@@ -878,7 +878,7 @@ function App() {
                   </div>
                 ))}
                 <h3 style={{ marginTop: "15px" }}>
-                  Total: ₹{totalPrice}
+                  Total: {formatUSD(totalPrice)}
                 </h3>
                 {!showCheckoutForm && !checkoutAddresses && (
                   <button style={{ marginTop: 16 }} onClick={handleCheckout}>Checkout</button>
@@ -975,7 +975,7 @@ function App() {
                           </div>
                         ))}
                       </div>
-                      <div>Total: ₹{order.total}</div>
+                      <div>Total: {formatUSD(order.total)}</div>
                     </div>
                   ))
               )}
