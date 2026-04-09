@@ -89,8 +89,7 @@ jobs:
           aws elasticbeanstalk create-application-version \
             --application-name ecommerce-backend \
             --version-label github-${{ github.run_number }} \
-            --source-bundle S3Bucket=elasticbeanstalk-eu-north-1-${{ secrets.AWS_ACCOUNT_ID }},S3Key=backend-deploy-${{ github.run_number }}.zip \
-            --overwrite
+            --source-bundle S3Bucket=elasticbeanstalk-eu-north-1-${{ secrets.AWS_ACCOUNT_ID }},S3Key=backend-deploy-${{ github.run_number }}.zip
 
       - name: Update environment to new version
         run: |
