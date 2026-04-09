@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import PayPalButton from "./PayPalButton";
 import ReviewPage from "./ReviewPage";
@@ -5,12 +6,14 @@ import TestimonialsPage from "./TestimonialsPage";
 import ContactUsPage from "./ContactUsPage";
 import CheckoutForm from "./CheckoutForm";
 import SalePage from "./SalePage";
+// Use environment variable for API base URL
+const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
 // ...existing code...
 
 // Utility to get absolute image URL
 const getImageUrl = (url) =>
   url && url.startsWith('/api/products/image/')
-    ? `http://localhost:8080${url}`
+    ? `${API_BASE_URL}${url}`
     : url;
 
 // AdminProductManager component
@@ -24,7 +27,7 @@ function AdminProductManager({ products, fetchProducts }) {
     // Fetch categories for dropdown
     const fetchCategories = async () => {
       try {
-        const res = await fetch("http://localhost:8080/api/categories");
+        const res = await fetch(`${API_BASE_URL}/api/categories`);
         if (!res.ok) throw new Error("Failed to fetch categories");
         const data = await res.json();
         setCategories(Array.isArray(data) ? data : []);
@@ -41,8 +44,8 @@ function AdminProductManager({ products, fetchProducts }) {
     e.preventDefault();
     const method = editing ? "PUT" : "POST";
     const url = editing
-      ? `http://localhost:8080/api/products/${editing}`
-      : "http://localhost:8080/api/products";
+      ? `${API_BASE_URL}/api/products/${editing}`
+      : `${API_BASE_URL}/api/products`;
     try {
       const res = await fetch(url, {
         method,
@@ -79,7 +82,7 @@ function AdminProductManager({ products, fetchProducts }) {
     const formData = new FormData();
     formData.append("file", file);
     try {
-      const res = await fetch("http://localhost:8080/api/products/upload-image", {
+      const res = await fetch(`${API_BASE_URL}/api/products/upload-image`, {
         method: "POST",
         body: formData,
       });
@@ -116,7 +119,7 @@ function AdminProductManager({ products, fetchProducts }) {
   // Delete product
   const handleDelete = async (id) => {
     try {
-      const res = await fetch(`http://localhost:8080/api/products/${id}`, { method: "DELETE" });
+      const res = await fetch(`${API_BASE_URL}/api/products/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete product");
     } catch (err) {
       console.error("Error deleting product:", err);
@@ -217,7 +220,7 @@ function App() {
         useEffect(() => {
           const fetchAll = async () => {
             try {
-              const res = await fetch("http://localhost:8080/api/products");
+              const res = await fetch(`${API_BASE_URL}/api/products`);
               const data = await res.json();
               // Populate color and brand options
               const uniqueColors = Array.from(new Set((Array.isArray(data) ? data : []).map(p => p.color).filter(Boolean)));
@@ -297,9 +300,9 @@ function App() {
     const hasAny = Object.values(params).some(v => v && v !== "");
     let url;
     if (!hasAny) {
-      url = "http://localhost:8080/api/products";
+      url = `${API_BASE_URL}/api/products`;
     } else {
-      url = "http://localhost:8080/api/products/filter?";
+      url = `${API_BASE_URL}/api/products/filter?`;
       const query = Object.entries(params)
         .filter(([_, v]) => v !== null && v !== "")
         .map(([k, v]) => `${k}=${encodeURIComponent(v)}`)
@@ -321,7 +324,7 @@ function App() {
   const fetchOrders = async () => {
     if (!user || !token) return;
     try {
-      const response = await fetch("http://localhost:8080/api/orders", {
+      const response = await fetch(`${API_BASE_URL}/api/orders`, {
         headers: { "Authorization": `Bearer ${token}` }
       });
       if (!response.ok) throw new Error("Failed to fetch orders");
@@ -362,7 +365,7 @@ function App() {
       return;
     }
     try {
-      const response = await fetch("http://localhost:8080/api/users/register", {
+      const response = await fetch(`${API_BASE_URL}/api/users/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password, gender, mobile }),
@@ -387,7 +390,7 @@ function App() {
       return;
     }
     try {
-      const response = await fetch("http://localhost:8080/api/users/login", {
+      const response = await fetch(`${API_BASE_URL}/api/users/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -426,7 +429,7 @@ function App() {
 
   const handleProductClick = async (id) => {
     try {
-      const response = await fetch(`http://localhost:8080/api/products/${id}`);
+      const response = await fetch(`${API_BASE_URL}/api/products/${id}`);
       if (!response.ok) throw new Error("Failed to fetch product details");
       const data = await response.json();
       setSelectedProduct(data);
@@ -512,7 +515,7 @@ function App() {
                 return;
               }
               try {
-                const res = await fetch("http://localhost:8080/api/users/forgot-password", {
+                const res = await fetch(`${API_BASE_URL}/api/users/forgot-password`, {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({ email: forgotEmail })
@@ -928,7 +931,7 @@ function App() {
                         billingAddress: checkoutAddresses.billingAddress,
                         shippingAddress: checkoutAddresses.shippingAddress
                       };
-                      const response = await fetch("http://localhost:8080/api/orders", {
+                      const response = await fetch(`${API_BASE_URL}/api/orders`, {
                         method: "POST",
                         headers: {
                           "Content-Type": "application/json",

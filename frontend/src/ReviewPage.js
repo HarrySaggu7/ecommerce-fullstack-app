@@ -1,3 +1,5 @@
+// Use environment variable for API base URL
+const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
 
 import React, { useState, useEffect } from 'react';
 
@@ -11,7 +13,7 @@ function ReviewPage({ user }) {
     const fetchReviews = async () => {
       try {
         setLoading(true);
-        const res = await fetch('http://localhost:8080/api/reviews');
+        const res = await fetch(`${API_BASE_URL}/api/reviews`);
         if (!res.ok) throw new Error('Failed to fetch reviews');
         const data = await res.json();
         setReviews(Array.isArray(data) ? data : []);
@@ -28,7 +30,7 @@ function ReviewPage({ user }) {
     e.preventDefault();
     if (user && user.name && comment) {
       try {
-        const res = await fetch('http://localhost:8080/api/reviews', {
+        const res = await fetch(`${API_BASE_URL}/api/reviews`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name: user.name, comment })

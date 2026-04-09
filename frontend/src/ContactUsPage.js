@@ -1,3 +1,5 @@
+// Use environment variable for API base URL
+const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
 import React, { useState, useEffect } from 'react';
 
 
@@ -16,7 +18,7 @@ function ContactUsPage({ user }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch('http://localhost:8080/api/contact', {
+      const res = await fetch(`${API_BASE_URL}/api/contact`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, message })

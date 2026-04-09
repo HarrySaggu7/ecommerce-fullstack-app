@@ -1,3 +1,5 @@
+// Use environment variable for API base URL
+const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
 import React, { useEffect, useRef } from "react";
 
 const PayPalButton = ({ total, onSuccess }) => {
@@ -12,7 +14,7 @@ const PayPalButton = ({ total, onSuccess }) => {
         window.paypal.Buttons({
           createOrder: async (data, actions) => {
             // Call backend to create PayPal payment
-            const res = await fetch("http://localhost:8080/api/paypal/create-payment", {
+            const res = await fetch(`${API_BASE_URL}/api/paypal/create-payment`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ total, currency: "USD" })
@@ -22,7 +24,7 @@ const PayPalButton = ({ total, onSuccess }) => {
           },
           onApprove: async (data, actions) => {
             // Call backend to execute payment
-            const res = await fetch("http://localhost:8080/api/paypal/execute-payment", {
+            const res = await fetch(`${API_BASE_URL}/api/paypal/execute-payment`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ paymentId: data.orderID, payerId: data.payerID })

@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 
+// Use environment variable for API base URL
+const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
 const getImageUrl = (url) =>
   url && url.startsWith('/api/products/image/')
-    ? `http://localhost:8080${url}`
+    ? `${API_BASE_URL}${url}`
     : url;
 
 export default function SalePage({ onProductClick, selectedProduct, addToCart, styles, getImageUrl }) {
@@ -15,11 +17,11 @@ export default function SalePage({ onProductClick, selectedProduct, addToCart, s
       setLoading(true);
       try {
         // Fetch all categories
-        const catRes = await fetch("http://localhost:8080/api/categories");
+        const catRes = await fetch(`${API_BASE_URL}/api/categories`);
         const catData = await catRes.json();
         setCategories(Array.isArray(catData) ? catData : []);
         // Fetch all products on sale (discount > 0)
-        const prodRes = await fetch("http://localhost:8080/api/products");
+        const prodRes = await fetch(`${API_BASE_URL}/api/products`);
         const prodData = await prodRes.json();
         const saleProducts = Array.isArray(prodData)
           ? prodData.filter((p) => p.discount && p.discount > 0)
