@@ -1,5 +1,4 @@
 
-on:
 
 name: CI/CD Pipeline
 
@@ -8,7 +7,6 @@ name: CI/CD Pipeline
     branches: [ main, story/ECommerce/GithubActionsSetup ]
   pull_request:
     branches: [ main, story/ECommerce/GithubActionsSetup ]
-
 jobs:
   build:
     runs-on: ubuntu-latest
