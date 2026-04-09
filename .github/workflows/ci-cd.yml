@@ -61,8 +61,11 @@ jobs:
         working-directory: backend
         run: ./mvnw clean package -DskipTests
 
-      - name: Generate deployment package (ZIP)
-        run: zip -r backend-deploy.zip backend/target/*.jar backend/.ebextensions || zip -r backend-deploy.zip backend/target/*.jar
+      - name: Prepare deployment package for Elastic Beanstalk
+        run: |
+          cp backend/target/*.jar app.jar
+          echo "web: java -jar app.jar --server.port=5000" > Procfile
+          zip backend-deploy.zip app.jar Procfile
 
       - name: Debug secrets
         run: |
