@@ -1,9 +1,8 @@
 
-on:
+
 
 name: CI/CD Pipeline
-
-
+on:
   push:
     branches: [ main, story/ECommerce/GithubActionsSetup ]
   pull_request:
