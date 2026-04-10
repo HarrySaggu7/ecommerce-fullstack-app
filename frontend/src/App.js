@@ -797,7 +797,7 @@ function App() {
                             onClick={() => handleProductClick(product.id)}
                           >
                             {product.imageUrl && (
-                              <img src={getImageUrl(product.imageUrl)} alt={product.name} style={{ width: '100%', maxHeight: 140, objectFit: 'contain', borderRadius: 6, marginBottom: 8, background: '#f8f8f8' }} />
+                              <img src={getImageUrl(product.imageUrl)} alt={product.name} style={{ width: '100%', maxHeight: 140, objectFit: 'contain', borderRadius: 6, marginBottom: 8, background: '#fff' }} />
                             )}
                             <h4 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                               {product.name || 'No Name'}
@@ -843,7 +843,7 @@ function App() {
                 {selectedProduct && typeof selectedProduct === 'object' && selectedProduct.id && (
                   <div style={styles.detailsCard}>
                     {selectedProduct.imageUrl && (
-                      <img src={getImageUrl(selectedProduct.imageUrl)} alt={selectedProduct.name} style={{ width: 220, maxHeight: 220, objectFit: 'contain', borderRadius: 8, marginBottom: 16, background: '#f8f8f8' }} />
+                      <img src={getImageUrl(selectedProduct.imageUrl)} alt={selectedProduct.name} style={{ width: 220, maxHeight: 220, objectFit: 'contain', borderRadius: 8, marginBottom: 16, background: '#fff' }} />
                     )}
                     <h2>{selectedProduct.name || 'No Name'}</h2>
                     {selectedProduct.discount && selectedProduct.discount > 0 && (
