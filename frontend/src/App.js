@@ -725,6 +725,7 @@ function App() {
                       setFilterColor("All");
                       setFilterBrand("All");
                       setFilterRating("All");
+                      setFilterCategory("All");
                       setSearch("");
                     }}
                   >
