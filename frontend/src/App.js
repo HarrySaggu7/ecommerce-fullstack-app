@@ -858,6 +858,7 @@ function App() {
                 {/* Product Details (moved below product grid) */}
                 {selectedProduct && typeof selectedProduct === 'object' && selectedProduct.id && (
                   <div style={styles.detailsCard}>
+                    <h2 style={{ marginBottom: 12, marginTop: 0 }}>Product Details</h2>
                     {selectedProduct.imageUrl && (
                       <img src={getImageUrl(selectedProduct.imageUrl)} alt={selectedProduct.name} style={{ width: 220, maxHeight: 220, objectFit: 'contain', borderRadius: 8, marginBottom: 16, background: '#fff' }} />
                     )}
