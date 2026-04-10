@@ -110,6 +110,9 @@ public class ProductController {
             return ResponseEntity.notFound().build();
         }
         byte[] image = Files.readAllBytes(path);
-        return ResponseEntity.ok().header("Content-Type", Files.probeContentType(path)).body(image);
+        return ResponseEntity.ok()
+            .header("Content-Type", Files.probeContentType(path))
+            .header("Cache-Control", "public, max-age=604800, immutable") // 7 days
+            .body(image);
     }
 }
