@@ -216,6 +216,8 @@ function AdminProductManager({ products, fetchProducts }) {
 }
 
 function App() {
+            // Loader state for product grid
+            const [loading, setLoading] = useState(false);
           // UI state: showLogin true = login form, false = register form
           const [showLogin, setShowLogin] = useState(true);
         // Fetch all products once for filter options
@@ -291,6 +293,7 @@ function App() {
 
   // Unified fetchProducts: always uses all filters and search
   const fetchProducts = async (paramsOverride = {}) => {
+    setLoading(true);
     const params = {
       keyword: search,
       color: filterColor && filterColor !== "All" ? filterColor : null,
@@ -317,9 +320,11 @@ function App() {
       if (!response.ok) throw new Error("Failed to fetch products");
       const data = await response.json();
       setProducts(Array.isArray(data) ? data : []);
+      setLoading(false);
     } catch (err) {
       console.error("Error fetching products:", err);
       setProducts([]);
+      setLoading(false);
     }
   };
 
@@ -720,6 +725,7 @@ function App() {
                       setFilterColor("All");
                       setFilterBrand("All");
                       setFilterRating("All");
+                      setFilterCategory("All");
                       setSearch("");
                     }}
                   >
@@ -746,7 +752,17 @@ function App() {
                 </div>
 
                 <div style={styles.productGrid}>
-                  {Array.isArray(products) && products.length === 0 ? (
+                  {loading ? (
+                    // Shimmer loader grid (3 cards)
+                    Array.from({ length: 3 }).map((_, idx) => (
+                      <div key={idx} style={{ ...styles.card, background: '#fff', minHeight: 260, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                        <div className="shimmer shimmer-img" style={{ width: '100%', height: 140, borderRadius: 6, marginBottom: 8 }} />
+                        <div className="shimmer" style={{ width: '60%', height: 20, borderRadius: 4, marginBottom: 8 }} />
+                        <div className="shimmer" style={{ width: '40%', height: 16, borderRadius: 4, marginBottom: 8 }} />
+                        <div className="shimmer" style={{ width: '80%', height: 16, borderRadius: 4 }} />
+                      </div>
+                    ))
+                  ) : Array.isArray(products) && products.length === 0 ? (
                     <div style={{ gridColumn: '1/-1', textAlign: 'center', color: '#888', fontSize: 22, padding: 40 }}>
                       <span role="img" aria-label="no products" style={{ fontSize: 40 }}>🛒</span>
                       <div>No products found matching your filters.</div>
@@ -1038,6 +1054,33 @@ function App() {
 }
 
 // ---------------- STYLES ----------------
+// Shimmer CSS
+const shimmerKeyframes = `
+  @keyframes shimmer {
+    0% { background-position: -400px 0; }
+    100% { background-position: 400px 0; }
+  }
+`;
+if (typeof document !== 'undefined' && !document.getElementById('shimmer-style')) {
+  const style = document.createElement('style');
+  style.id = 'shimmer-style';
+  style.innerHTML = `
+    .shimmer {
+      background: #f6f7f8;
+      background-image: linear-gradient(90deg, #f6f7f8 0px, #edeef1 40px, #f6f7f8 80px);
+      background-size: 400px 100%;
+      background-repeat: no-repeat;
+      display: inline-block;
+      position: relative;
+      animation: shimmer 1.2s infinite linear;
+    }
+    .shimmer-img {
+      margin-bottom: 12px;
+    }
+    ${shimmerKeyframes}
+  `;
+  document.head.appendChild(style);
+}
 const styles = {
 container: {
 padding: "30px",

@@ -61,7 +61,7 @@ export default function SalePage({ onProductClick, selectedProduct, addToCart, s
                 onClick={() => onProductClick && onProductClick(product.id)}
               >
                 {product.imageUrl && (
-                  <img src={getImageUrl(product.imageUrl)} alt={product.name} style={{ width: '100%', maxHeight: 120, objectFit: 'contain', borderRadius: 6, marginBottom: 8, background: '#f8f8f8' }} />
+                  <img src={getImageUrl(product.imageUrl)} alt={product.name} style={{ width: '100%', maxHeight: 120, objectFit: 'contain', borderRadius: 6, marginBottom: 8, background: '#fff' }} />
                 )}
                 <h4 style={{ margin: '8px 0 4px 0' }}>{product.name}</h4>
                 <div style={{ color: '#d9534f', fontWeight: 'bold', fontSize: 18 }}>
@@ -80,7 +80,7 @@ export default function SalePage({ onProductClick, selectedProduct, addToCart, s
       {selectedProduct && typeof selectedProduct === 'object' && selectedProduct.id && (
         <div style={styles.detailsCard}>
           {selectedProduct.imageUrl && (
-            <img src={getImageUrl(selectedProduct.imageUrl)} alt={selectedProduct.name} style={{ width: 220, maxHeight: 220, objectFit: 'contain', borderRadius: 8, marginBottom: 16, background: '#f8f8f8' }} />
+            <img src={getImageUrl(selectedProduct.imageUrl)} alt={selectedProduct.name} style={{ width: 220, maxHeight: 220, objectFit: 'contain', borderRadius: 8, marginBottom: 16, background: '#fff' }} />
           )}
           <h2>{selectedProduct.name || 'No Name'}</h2>
           {selectedProduct.discount && selectedProduct.discount > 0 && (
