@@ -28,6 +28,14 @@ public class Order {
     private String status; // e.g., PLACED, SHIPPED, DELIVERED
     private String createdAt;
 
+    @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "billing_address_id")
+    private Address billingAddress;
+
+    @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "shipping_address_id")
+    private Address shippingAddress;
+
     // Getters and setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -41,4 +49,10 @@ public class Order {
     public void setStatus(String status) { this.status = status; }
     public String getCreatedAt() { return createdAt; }
     public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
+
+    public Address getBillingAddress() { return billingAddress; }
+    public void setBillingAddress(Address billingAddress) { this.billingAddress = billingAddress; }
+
+    public Address getShippingAddress() { return shippingAddress; }
+    public void setShippingAddress(Address shippingAddress) { this.shippingAddress = shippingAddress; }
 }
