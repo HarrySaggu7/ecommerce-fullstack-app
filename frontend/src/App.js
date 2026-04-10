@@ -857,13 +857,12 @@ function App() {
 
                 {/* Product Details (moved below product grid) */}
                 {selectedProduct && typeof selectedProduct === 'object' && selectedProduct.id && (
-                  <>
-                    <h2 style={{ marginBottom: 12, marginTop: 24 }}>Product Details</h2>
-                    <div style={styles.detailsCard}>
-                      {selectedProduct.imageUrl && (
-                        <img src={getImageUrl(selectedProduct.imageUrl)} alt={selectedProduct.name} style={{ width: 220, maxHeight: 220, objectFit: 'contain', borderRadius: 8, marginBottom: 16, background: '#fff' }} />
-                      )}
-                      <h2>{selectedProduct.name || 'No Name'}</h2>
+                  <div style={styles.detailsCard}>
+                    <h2 style={{ marginBottom: 12, marginTop: 0 }}>Product Details</h2>
+                    {selectedProduct.imageUrl && (
+                      <img src={getImageUrl(selectedProduct.imageUrl)} alt={selectedProduct.name} style={{ width: 220, maxHeight: 220, objectFit: 'contain', borderRadius: 8, marginBottom: 16, background: '#fff' }} />
+                    )}
+                    <h2>{selectedProduct.name || 'No Name'}</h2>
                     {selectedProduct.discount && selectedProduct.discount > 0 && (
                       <span style={{ color: "#d9534f", fontWeight: "bold", marginRight: 8 }}>Sale</span>
                     )}
