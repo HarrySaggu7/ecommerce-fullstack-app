@@ -216,6 +216,8 @@ function AdminProductManager({ products, fetchProducts }) {
 }
 
 function App() {
+          // UI state: showLogin true = login form, false = register form
+          const [showLogin, setShowLogin] = useState(true);
         // Fetch all products once for filter options
         useEffect(() => {
           const fetchAll = async () => {
@@ -537,32 +539,74 @@ function App() {
     return (
       <div style={authStyles.container}>
         <div style={authStyles.card}>
-          <h2 style={{ marginBottom: "20px" }}>Welcome Back</h2>
-          <input style={authStyles.input} placeholder="Email" onChange={(e) => setEmail(e.target.value)} />
-          <input style={authStyles.input} type="password" placeholder="Password" onChange={(e) => setPassword(e.target.value)} />
-          <label style={{ display: 'flex', alignItems: 'center', margin: '8px 0' }}>
-            <input type="checkbox" checked={rememberMe} onChange={e => setRememberMe(e.target.checked)} style={{ marginRight: 6 }} />
-            Remember me
-          </label>
-          <button style={authStyles.loginBtn} onClick={handleLogin}>Login</button>
-          <span style={{ color: '#007bff', cursor: 'pointer', marginTop: 8, display: 'inline-block' }} onClick={() => setShowForgotPassword(true)}>
-            Forget your password?
-          </span>
-          {loginError && <div style={{ color: 'red', marginTop: 8 }}>{loginError}</div>}
-          <div style={authStyles.divider}></div>
-          <h3>Create Account</h3>
-          <input style={authStyles.input} placeholder="Name" onChange={(e) => setName(e.target.value)} />
-          <select style={authStyles.input} value={gender} onChange={e => setGender(e.target.value)}>
-            <option value="">Gender</option>
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-            <option value="other">Other</option>
-          </select>
-          <input style={authStyles.input} placeholder="Mobile Number" onChange={(e) => setMobile(e.target.value)} maxLength={10} />
-          <input style={authStyles.input} placeholder="Email" onChange={(e) => setEmail(e.target.value)} />
-          <input style={authStyles.input} type="password" placeholder="Password" onChange={(e) => setPassword(e.target.value)} />
-          <button style={authStyles.registerBtn} onClick={handleRegister}>Register</button>
-          {registerError && <div style={{ color: 'red', marginTop: 8 }}>{registerError}</div>}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
+            <button
+              style={{
+                ...authStyles.loginBtn,
+                background: showLogin ? '#007bff' : '#6c757d',
+                width: '50%',
+                marginRight: 4,
+                borderBottomLeftRadius: 0,
+                borderBottomRightRadius: 0,
+                borderTopRightRadius: 0,
+                borderTopLeftRadius: 6,
+                fontWeight: showLogin ? 700 : 400
+              }}
+              onClick={() => setShowLogin(true)}
+              disabled={showLogin}
+            >
+              Login
+            </button>
+            <button
+              style={{
+                ...authStyles.registerBtn,
+                background: !showLogin ? '#28a745' : '#6c757d',
+                width: '50%',
+                marginLeft: 4,
+                borderBottomLeftRadius: 0,
+                borderBottomRightRadius: 0,
+                borderTopLeftRadius: 0,
+                borderTopRightRadius: 6,
+                fontWeight: !showLogin ? 700 : 400
+              }}
+              onClick={() => setShowLogin(false)}
+              disabled={!showLogin}
+            >
+              Register
+            </button>
+          </div>
+          {showLogin ? (
+            <>
+              <h2 style={{ marginBottom: "20px" }}>Welcome Back</h2>
+              <input style={authStyles.input} placeholder="Email" onChange={(e) => setEmail(e.target.value)} />
+              <input style={authStyles.input} type="password" placeholder="Password" onChange={(e) => setPassword(e.target.value)} />
+              <label style={{ display: 'flex', alignItems: 'center', margin: '8px 0' }}>
+                <input type="checkbox" checked={rememberMe} onChange={e => setRememberMe(e.target.checked)} style={{ marginRight: 6 }} />
+                Remember me
+              </label>
+              <button style={authStyles.loginBtn} onClick={handleLogin}>Login</button>
+              <span style={{ color: '#007bff', cursor: 'pointer', marginTop: 8, display: 'inline-block' }} onClick={() => setShowForgotPassword(true)}>
+                Forget your password?
+              </span>
+              {loginError && <div style={{ color: 'red', marginTop: 8 }}>{loginError}</div>}
+            </>
+          ) : (
+            <>
+              <h2 style={{ marginBottom: "20px" }}>Create Account</h2>
+              <input style={authStyles.input} placeholder="Name" onChange={(e) => setName(e.target.value)} />
+              <select style={authStyles.input} value={gender} onChange={e => setGender(e.target.value)}>
+                <option value="">Gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+              </select>
+              <input style={authStyles.input} placeholder="Mobile Number" onChange={(e) => setMobile(e.target.value)} maxLength={10} />
+              <input style={authStyles.input} placeholder="Email" onChange={(e) => setEmail(e.target.value)} />
+              <input style={authStyles.input} type="password" placeholder="Password" onChange={(e) => setPassword(e.target.value)} />
+              <button style={authStyles.registerBtn} onClick={handleRegister}>Register</button>
+              {registerError && <div style={{ color: 'red', marginTop: 8 }}>{registerError}</div>}
+            </>
+          )}
           <div style={{ margin: "20px 0 0 0", textAlign: "center" }}>
             <span style={{ color: "#888" }}>or</span>
             <br />
