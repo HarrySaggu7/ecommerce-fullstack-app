@@ -46,16 +46,9 @@ jobs:
         run: npm install
 
   deploy-backend:
-    if: github.event_name == 'push' || github.event_name == 'pull_request'
     needs: build
     runs-on: ubuntu-latest
     steps:
-      # Only run if backend files change
-    strategy:
-      matrix:
-        include:
-          - path: 'backend/**'
-    continue-on-error: false
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -110,16 +103,9 @@ jobs:
             --version-label ${{ env.VERSION_LABEL }}
 
   deploy-frontend:
-    if: github.event_name == 'push' || github.event_name == 'pull_request'
     needs: build
     runs-on: ubuntu-latest
     steps:
-      # Only run if frontend files change
-    strategy:
-      matrix:
-        include:
-          - path: 'frontend/**'
-    continue-on-error: false
       - name: Checkout code
         uses: actions/checkout@v4
 
