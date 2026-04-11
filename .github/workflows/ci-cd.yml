@@ -1,3 +1,6 @@
+
+
+
 name: CI/CD Pipeline
 on:
   push:
@@ -31,9 +34,6 @@ jobs:
 
       - name: Build Backend with Maven (skip tests)
         working-directory: backend
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: ./mvnw clean install -DskipTests
 
       - name: Set up Node.js
@@ -60,9 +60,6 @@ jobs:
 
       - name: Build Backend with Maven (skip tests)
         working-directory: backend
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: ./mvnw clean package -DskipTests
 
       - name: Prepare deployment package for Elastic Beanstalk
@@ -169,15 +166,13 @@ jobs:
 
       - name: Create new application version
         run: |
-          VERSION_LABEL=github-${{ github.run_number }}-$(date +%s)
           aws elasticbeanstalk create-application-version \
             --application-name ecommerce-backend \
-            --version-label $VERSION_LABEL \
+            --version-label github-${{ github.run_number }} \
             --source-bundle S3Bucket=elasticbeanstalk-eu-north-1-${{ secrets.AWS_ACCOUNT_ID }},S3Key=backend-deploy-${{ github.run_number }}.zip
-          echo "VERSION_LABEL=$VERSION_LABEL" >> $GITHUB_ENV
 
       - name: Update environment to new version
         run: |
           aws elasticbeanstalk update-environment \
             --environment-name ecommerce-backend-env \
-            --version-label ${{ env.VERSION_LABEL }}
+            --version-label github-${{ github.run_number }}
