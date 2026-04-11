@@ -15,11 +15,15 @@ import java.io.IOException;
 @CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping("/api/products")
+
 public class ProductController {
 
     private final ProductRepository productRepository;
     @Autowired
     private ProductService productService;
+
+    @Autowired
+    private S3ImageService s3ImageService;
 
     ProductController(ProductRepository productRepository) {
         this.productRepository = productRepository;
@@ -80,39 +84,20 @@ public class ProductController {
         return productRepository.findById(id).orElse(null);
     }
 
-    // Image upload endpoint
+
+    // Image upload endpoint (S3)
     @PostMapping("/upload-image")
     public ResponseEntity<String> uploadImage(@RequestParam("file") MultipartFile file) {
         if (file.isEmpty()) {
             return ResponseEntity.badRequest().body("No file selected");
         }
         try {
-            String uploadsDir = "uploads/";
-            String realPath = System.getProperty("user.dir") + "/backend/" + uploadsDir;
-            Files.createDirectories(Paths.get(realPath));
-            String filename = System.currentTimeMillis() + "_" + file.getOriginalFilename();
-            Path filePath = Paths.get(realPath, filename);
-            file.transferTo(filePath);
-            String imageUrl = "/api/products/image/" + filename;
+            String imageUrl = s3ImageService.uploadFile(file);
             return ResponseEntity.ok(imageUrl);
         } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to upload image");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to upload image to S3");
         }
     }
 
-    // Serve uploaded images
-    @GetMapping("/image/{filename}")
-    public ResponseEntity<byte[]> getImage(@PathVariable String filename) throws IOException {
-        String uploadsDir = "uploads/";
-        String realPath = System.getProperty("user.dir") + "/backend/" + uploadsDir + filename;
-        Path path = Paths.get(realPath);
-        if (!Files.exists(path)) {
-            return ResponseEntity.notFound().build();
-        }
-        byte[] image = Files.readAllBytes(path);
-        return ResponseEntity.ok()
-            .header("Content-Type", Files.probeContentType(path))
-            .header("Cache-Control", "public, max-age=604800, immutable") // 7 days
-            .body(image);
-    }
+    // S3 serves images directly via public URL, so this endpoint is no longer needed.
 }
