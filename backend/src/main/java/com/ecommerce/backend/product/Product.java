@@ -33,13 +33,8 @@ public class Product {
     // Brand
     private String brand;
 
-    // Product image URL (optional, for backward compatibility)
+    // Product image URL
     private String imageUrl;
-
-    // Product image data (stored as bytea in PostgreSQL)
-    @Lob
-    @Column(name = "image_data")
-    private byte[] imageData;
 
     // Rating (1-5)
     private Integer rating;
@@ -76,12 +71,8 @@ public class Product {
     public String getBrand() { return brand; }
     public void setBrand(String brand) { this.brand = brand; }
 
-
     public String getImageUrl() { return imageUrl; }
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
-
-    public byte[] getImageData() { return imageData; }
-    public void setImageData(byte[] imageData) { this.imageData = imageData; }
 
     public Integer getRating() { return rating; }
     public void setRating(Integer rating) { this.rating = rating; }

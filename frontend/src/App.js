@@ -10,14 +10,17 @@ import SalePage from "./SalePage";
 const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
 // Utility to format price in USD
 const formatUSD = (price) => price != null ? price.toLocaleString('en-US', { style: 'currency', currency: 'USD' }) : '';
-// Utility to get image URL by product ID
-const getImageUrl = (productId) => `${API_BASE_URL}/api/products/image-by-id/${productId}`;
+// Utility to get absolute image URL
+const getImageUrl = (url) =>
+  url && url.startsWith('/api/products/image/')
+    ? `${API_BASE_URL}${url}`
+    : url;
 
 // AdminProductManager component
 function AdminProductManager({ products, fetchProducts }) {
   const [editing, setEditing] = useState(null);
   const [categories, setCategories] = useState([]);
-  const [form, setForm] = useState({ name: "", description: "", price: "", discount: "", stock: "", category: "", color: "", brand: "", rating: "", isNew: false, imageFile: null });
+  const [form, setForm] = useState({ name: "", description: "", price: "", discount: "", stock: "", category: "", color: "", brand: "", rating: "", isNew: false, imageUrl: "" });
   const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
@@ -43,7 +46,6 @@ function AdminProductManager({ products, fetchProducts }) {
     const url = editing
       ? `${API_BASE_URL}/api/products/${editing}`
       : `${API_BASE_URL}/api/products`;
-    let productId = editing;
     try {
       const res = await fetch(url, {
         method,
@@ -58,38 +60,42 @@ function AdminProductManager({ products, fetchProducts }) {
           color: form.color,
           brand: form.brand,
           rating: form.rating ? parseInt(form.rating) : null,
-          isNew: !!form.isNew
+          isNew: !!form.isNew,
+          imageUrl: form.imageUrl || ""
         }),
       });
       if (!res.ok) throw new Error("Failed to save product");
-      const savedProduct = await res.json();
-      productId = savedProduct.id;
-      // If image file is selected, upload it
-      if (form.imageFile && productId) {
-        setUploadingImage(true);
-        const formData = new FormData();
-        formData.append("file", form.imageFile);
-        const imgRes = await fetch(`${API_BASE_URL}/api/products/upload-image/${productId}`, {
-          method: "POST",
-          body: formData,
-        });
-        setUploadingImage(false);
-        if (!imgRes.ok) alert("Image upload failed");
-      }
     } catch (err) {
       console.error("Error saving product:", err);
     }
-    setForm({ name: "", description: "", price: "", discount: "", stock: "", category: "", color: "", brand: "", rating: "", isNew: false, imageFile: null });
+    setForm({ name: "", description: "", price: "", discount: "", stock: "", category: "", color: "", brand: "", rating: "", isNew: false, imageUrl: "" });
     setEditing(null);
     fetchProducts();
     window.dispatchEvent(new Event('refreshAllProducts'));
   };
 
-  // Handle image file selection (store in form state)
-  const handleImageUpload = (e) => {
+  // Handle image file upload
+  const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    setForm({ ...form, imageFile: file });
+    setUploadingImage(true);
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/products/upload-image`, {
+        method: "POST",
+        body: formData,
+      });
+      const imageUrl = await res.text();
+      if (res.ok && imageUrl) {
+        setForm({ ...form, imageUrl });
+      } else {
+        alert("Image upload failed");
+      }
+    } catch (err) {
+      alert("Image upload failed");
+    }
+    setUploadingImage(false);
   };
 
   // Edit product
@@ -106,7 +112,7 @@ function AdminProductManager({ products, fetchProducts }) {
       brand: product.brand || "",
       rating: product.rating || "",
       isNew: !!product.isNew,
-      imageFile: null
+      imageUrl: product.imageUrl || ""
     });
   };
 
@@ -147,12 +153,12 @@ function AdminProductManager({ products, fetchProducts }) {
         </label>
         <input type="file" accept="image/*" onChange={handleImageUpload} />
         {uploadingImage && <span>Uploading...</span>}
-        {form.imageFile && (
-          <img src={URL.createObjectURL(form.imageFile)} alt="Preview" style={{ maxWidth: 60, maxHeight: 60, borderRadius: 4, border: '1px solid #ccc' }} />
+        {form.imageUrl && (
+          <img src={getImageUrl(form.imageUrl)} alt="Preview" style={{ maxWidth: 60, maxHeight: 60, borderRadius: 4, border: '1px solid #ccc' }} />
         )}
         <button type="submit">{editing ? "Update" : "Add"} Product</button>
         {editing && (
-          <button type="button" onClick={() => { setEditing(null); setForm({ name: "", description: "", price: "", discount: "", stock: "", category: "", color: "", brand: "", rating: "", isNew: false, imageFile: null }); }}>
+          <button type="button" onClick={() => { setEditing(null); setForm({ name: "", description: "", price: "", discount: "", stock: "", category: "", color: "", brand: "", rating: "", isNew: false, imageUrl: "" }); }}>
             Cancel
           </button>
         )}
@@ -806,7 +812,9 @@ function App() {
                             style={styles.card}
                             onClick={() => handleProductClick(product.id)}
                           >
-                            <img src={getImageUrl(product.id)} alt={product.name} style={{ width: '100%', maxHeight: 140, objectFit: 'contain', borderRadius: 6, marginBottom: 8, background: '#fff' }} />
+                            {product.imageUrl && (
+                              <img src={getImageUrl(product.imageUrl)} alt={product.name} style={{ width: '100%', maxHeight: 140, objectFit: 'contain', borderRadius: 6, marginBottom: 8, background: '#fff' }} />
+                            )}
                             <h4 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                               {product.name || 'No Name'}
                               {product.isNew && (
@@ -851,7 +859,9 @@ function App() {
                 {selectedProduct && typeof selectedProduct === 'object' && selectedProduct.id && (
                   <div style={styles.detailsCard}>
                     <h2 style={{ marginBottom: 12, marginTop: 0 }}>Product Details</h2>
-                    <img src={getImageUrl(selectedProduct.id)} alt={selectedProduct.name} style={{ width: 220, maxHeight: 220, objectFit: 'contain', borderRadius: 8, marginBottom: 16, background: '#fff' }} />
+                    {selectedProduct.imageUrl && (
+                      <img src={getImageUrl(selectedProduct.imageUrl)} alt={selectedProduct.name} style={{ width: 220, maxHeight: 220, objectFit: 'contain', borderRadius: 8, marginBottom: 16, background: '#fff' }} />
+                    )}
                     <h2>{selectedProduct.name || 'No Name'}</h2>
                     {selectedProduct.discount && selectedProduct.discount > 0 && (
                       <span style={{ color: "#d9534f", fontWeight: "bold", marginRight: 8 }}>Sale</span>
@@ -1052,7 +1062,9 @@ function App() {
                       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', margin: '8px 0' }}>
                         {order.products && order.products.map((p) => (
                           <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#fafbfc', borderRadius: 6, padding: '4px 10px', border: '1px solid #eee', minWidth: 120 }}>
-                            <img src={getImageUrl(p.id)} alt={p.name} style={{ width: 40, height: 40, objectFit: 'contain', borderRadius: 4, background: '#fff', border: '1px solid #ddd' }} />
+                            {p.imageUrl && (
+                              <img src={getImageUrl(p.imageUrl)} alt={p.name} style={{ width: 40, height: 40, objectFit: 'contain', borderRadius: 4, background: '#fff', border: '1px solid #ddd' }} />
+                            )}
                             <span>{p.name}</span>
                           </div>
                         ))}

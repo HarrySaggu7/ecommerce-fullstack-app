@@ -7,6 +7,9 @@ import java.util.List;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.io.IOException;
 
 @CrossOrigin(origins = "http://localhost:3000")
@@ -77,47 +80,39 @@ public class ProductController {
         return productRepository.findById(id).orElse(null);
     }
 
-
-    // Image upload endpoint (store in PostgreSQL)
-    @PostMapping("/upload-image/{productId}")
-    public ResponseEntity<String> uploadImage(@PathVariable Long productId, @RequestParam("file") MultipartFile file) {
+    // Image upload endpoint
+    @PostMapping("/upload-image")
+    public ResponseEntity<String> uploadImage(@RequestParam("file") MultipartFile file) {
         if (file.isEmpty()) {
             return ResponseEntity.badRequest().body("No file selected");
         }
         try {
-            Product product = productRepository.findById(productId).orElse(null);
-            if (product == null) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Product not found");
-            }
-            product.setImageData(file.getBytes());
-            product.setImageUrl(file.getOriginalFilename()); // Optional: store original filename
-            productRepository.save(product);
-            String imageUrl = "/api/products/image-by-id/" + productId;
+            String uploadsDir = "uploads/";
+            String realPath = System.getProperty("user.dir") + "/backend/" + uploadsDir;
+            Files.createDirectories(Paths.get(realPath));
+            String filename = System.currentTimeMillis() + "_" + file.getOriginalFilename();
+            Path filePath = Paths.get(realPath, filename);
+            file.transferTo(filePath);
+            String imageUrl = "/api/products/image/" + filename;
             return ResponseEntity.ok(imageUrl);
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to upload image");
         }
     }
 
-
-    // Serve image from PostgreSQL by product ID
-    @GetMapping("/image-by-id/{productId}")
-    public ResponseEntity<byte[]> getImageById(@PathVariable Long productId) {
-        Product product = productRepository.findById(productId).orElse(null);
-        if (product == null || product.getImageData() == null) {
+    // Serve uploaded images
+    @GetMapping("/image/{filename}")
+    public ResponseEntity<byte[]> getImage(@PathVariable String filename) throws IOException {
+        String uploadsDir = "uploads/";
+        String realPath = System.getProperty("user.dir") + "/backend/" + uploadsDir + filename;
+        Path path = Paths.get(realPath);
+        if (!Files.exists(path)) {
             return ResponseEntity.notFound().build();
         }
-        // Try to guess content type from filename
-        String contentType = "application/octet-stream";
-        String filename = product.getImageUrl();
-        if (filename != null) {
-            if (filename.endsWith(".png")) contentType = "image/png";
-            else if (filename.endsWith(".jpg") || filename.endsWith(".jpeg")) contentType = "image/jpeg";
-            else if (filename.endsWith(".webp")) contentType = "image/webp";
-        }
+        byte[] image = Files.readAllBytes(path);
         return ResponseEntity.ok()
-            .header("Content-Type", contentType)
+            .header("Content-Type", Files.probeContentType(path))
             .header("Cache-Control", "public, max-age=604800, immutable") // 7 days
-            .body(product.getImageData());
+            .body(image);
     }
 }
