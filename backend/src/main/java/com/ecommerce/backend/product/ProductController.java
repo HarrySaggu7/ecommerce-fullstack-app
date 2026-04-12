@@ -7,9 +7,6 @@ import java.util.List;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.io.IOException;
 
 @CrossOrigin(origins = "http://localhost:3000")
@@ -21,8 +18,11 @@ public class ProductController {
     @Autowired
     private ProductService productService;
 
-    ProductController(ProductRepository productRepository) {
+    private final S3ImageService s3ImageService;
+
+    ProductController(ProductRepository productRepository, S3ImageService s3ImageService) {
         this.productRepository = productRepository;
+        this.s3ImageService = s3ImageService;
     }
 
 
@@ -87,32 +87,12 @@ public class ProductController {
             return ResponseEntity.badRequest().body("No file selected");
         }
         try {
-            String uploadsDir = "uploads/";
-            String realPath = System.getProperty("user.dir") + "/backend/" + uploadsDir;
-            Files.createDirectories(Paths.get(realPath));
-            String filename = System.currentTimeMillis() + "_" + file.getOriginalFilename();
-            Path filePath = Paths.get(realPath, filename);
-            file.transferTo(filePath);
-            String imageUrl = "/api/products/image/" + filename;
+            String imageUrl = s3ImageService.uploadFile(file);
             return ResponseEntity.ok(imageUrl);
         } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to upload image");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to upload image: " + e.getMessage());
         }
     }
 
-    // Serve uploaded images
-    @GetMapping("/image/{filename}")
-    public ResponseEntity<byte[]> getImage(@PathVariable String filename) throws IOException {
-        String uploadsDir = "uploads/";
-        String realPath = System.getProperty("user.dir") + "/backend/" + uploadsDir + filename;
-        Path path = Paths.get(realPath);
-        if (!Files.exists(path)) {
-            return ResponseEntity.notFound().build();
-        }
-        byte[] image = Files.readAllBytes(path);
-        return ResponseEntity.ok()
-            .header("Content-Type", Files.probeContentType(path))
-            .header("Cache-Control", "public, max-age=604800, immutable") // 7 days
-            .body(image);
-    }
+    // Images are now served directly from S3 via the returned URL
 }
