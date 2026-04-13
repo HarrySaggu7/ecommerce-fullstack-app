@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 
 // Use environment variable for API base URL
 const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
@@ -10,6 +10,7 @@ const getImageUrl = (url) =>
     : url;
 
 export default function SalePage({ onProductClick, selectedProduct, addToCart, styles, getImageUrl }) {
+  const productDetailsRef = useRef(null);
   const [categories, setCategories] = useState([]);
   const [productsByCategory, setProductsByCategory] = useState({});
   const [loading, setLoading] = useState(true);
@@ -45,6 +46,13 @@ export default function SalePage({ onProductClick, selectedProduct, addToCart, s
     fetchSaleProducts();
   }, []);
 
+
+  useEffect(() => {
+    if (selectedProduct && productDetailsRef.current) {
+      productDetailsRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [selectedProduct]);
+
   if (loading) return <div>Loading sale items...</div>;
 
   return (
@@ -78,7 +86,7 @@ export default function SalePage({ onProductClick, selectedProduct, addToCart, s
 
       {/* Product Details (same as App.js) */}
       {selectedProduct && typeof selectedProduct === 'object' && selectedProduct.id && (
-        <div style={styles.detailsCard}>
+        <div ref={productDetailsRef} style={styles.detailsCard}>
           {selectedProduct.imageUrl && (
             <img src={getImageUrl(selectedProduct.imageUrl)} alt={selectedProduct.name} style={{ width: 220, maxHeight: 220, objectFit: 'contain', borderRadius: 8, marginBottom: 16, background: '#fff' }} />
           )}
