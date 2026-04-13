@@ -216,10 +216,13 @@ function AdminProductManager({ products, fetchProducts }) {
 }
 
 function App() {
-            // Loader state for product grid
-            const [loading, setLoading] = useState(false);
-          // UI state: showLogin true = login form, false = register form
-          const [showLogin, setShowLogin] = useState(true);
+  // Loader state for product grid
+  const [loading, setLoading] = useState(false);
+  // UI state: showLogin true = login form, false = register form
+  const [showLogin, setShowLogin] = useState(true);
+  // Subcategory filter state
+  const [filterSubcategory, setFilterSubcategory] = useState("All");
+  const [subcategoryOptions, setSubcategoryOptions] = useState([]);
         // Fetch all products once for filter options
         useEffect(() => {
           const fetchAll = async () => {
@@ -290,6 +293,36 @@ function App() {
   const [colorOptions, setColorOptions] = useState([]);
   const [categoryOptions, setCategoryOptions] = useState([]);
   const [filterCategory, setFilterCategory] = useState("All");
+  // Update subcategory options when filterCategory changes
+  useEffect(() => {
+    if (filterCategory === "All") {
+      setSubcategoryOptions([]);
+      setFilterSubcategory("All");
+    } else {
+      // Find the selected category in categoryOptions (which are names)
+      // But we need the full category object, so fetch from backend
+      // We'll use the categories from AdminProductManager fetch for this
+      // If not available, fallback to empty
+      const fetchSubcategories = async () => {
+        try {
+          const res = await fetch(`${API_BASE_URL}/api/categories`);
+          if (!res.ok) throw new Error("Failed to fetch categories");
+          const data = await res.json();
+          const selectedCat = (Array.isArray(data) ? data : []).find(cat => cat.name === filterCategory);
+          if (selectedCat && selectedCat.children && Array.isArray(selectedCat.children)) {
+            setSubcategoryOptions(["All", ...selectedCat.children.map(sub => sub.name)]);
+          } else {
+            setSubcategoryOptions([]);
+          }
+          setFilterSubcategory("All");
+        } catch {
+          setSubcategoryOptions([]);
+          setFilterSubcategory("All");
+        }
+      };
+      fetchSubcategories();
+    }
+  }, [filterCategory]);
 
   // Unified fetchProducts: always uses all filters and search
   const fetchProducts = async (paramsOverride = {}) => {
@@ -299,7 +332,8 @@ function App() {
       color: filterColor && filterColor !== "All" ? filterColor : null,
       brand: filterBrand && filterBrand !== "All" ? filterBrand : null,
       rating: filterRating && filterRating !== "All" ? parseInt(filterRating) : null,
-        category: filterCategory && filterCategory !== "All" ? filterCategory : null,
+      category: filterCategory && filterCategory !== "All" ? filterCategory : null,
+      subcategory: filterSubcategory && filterSubcategory !== "All" ? filterSubcategory : null,
       ...paramsOverride
     };
     const hasAny = Object.values(params).some(v => v && v !== "");
@@ -667,7 +701,7 @@ function App() {
                       onChange={e => setSearch(e.target.value)}
                     />
                   </div>
-                  {/* Filter controls including Category */}
+                  {/* Filter controls including Category and Subcategory */}
                   <>
                     <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
                       <div>
@@ -682,6 +716,20 @@ function App() {
                           ))}
                         </select>
                       </div>
+                      {subcategoryOptions.length > 0 && (
+                        <div>
+                          <label style={{ fontWeight: 600 }}>Subcategory</label>
+                          <select
+                            style={styles.search}
+                            value={filterSubcategory}
+                            onChange={e => setFilterSubcategory(e.target.value)}
+                          >
+                            {subcategoryOptions.map((sub) => (
+                              <option key={sub} value={sub}>{sub}</option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
                       <div>
                         <label style={{ fontWeight: 600 }}>Color</label>
                         <select
