@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import PayPalButton from "./PayPalButton";
 import ReviewPage from "./ReviewPage";
 import TestimonialsPage from "./TestimonialsPage";
@@ -216,6 +216,8 @@ function AdminProductManager({ products, fetchProducts }) {
 }
 
 function App() {
+  // Ref for product details section
+  const productDetailsRef = useRef(null);
             // Loader state for product grid
             const [loading, setLoading] = useState(false);
           // UI state: showLogin true = login form, false = register form
@@ -440,6 +442,12 @@ function App() {
       if (!response.ok) throw new Error("Failed to fetch product details");
       const data = await response.json();
       setSelectedProduct(data);
+      // Scroll to product details after setting product
+      setTimeout(() => {
+        if (productDetailsRef.current) {
+          productDetailsRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 100);
     } catch (err) {
       console.error("Error fetching product details:", err);
       setSelectedProduct(null);
@@ -857,7 +865,7 @@ function App() {
 
                 {/* Product Details (moved below product grid) */}
                 {selectedProduct && typeof selectedProduct === 'object' && selectedProduct.id && (
-                  <div style={styles.detailsCard}>
+                  <div ref={productDetailsRef} style={styles.detailsCard}>
                     <h2 style={{ marginBottom: 12, marginTop: 0 }}>Product Details</h2>
                     {selectedProduct.imageUrl && (
                       <img src={getImageUrl(selectedProduct.imageUrl)} alt={selectedProduct.name} style={{ width: 220, maxHeight: 220, objectFit: 'contain', borderRadius: 8, marginBottom: 16, background: '#fff' }} />
