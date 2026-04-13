@@ -46,6 +46,7 @@ jobs:
         run: npm install
 
   deploy-backend:
+    if: github.event_name == 'push'
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -100,6 +101,7 @@ jobs:
             --version-label ${{ env.VERSION_LABEL }}
 
   deploy-frontend:
+    if: github.event_name == 'push'
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -131,48 +133,3 @@ jobs:
           aws s3 sync frontend/build s3://ecommerce-frontend-harpreetsaggu2026 --delete
           aws s3 website s3://ecommerce-frontend-harpreetsaggu2026/ --index-document index.html --error-document index.html
 
-      - name: Build Backend with Maven (skip tests)
-        working-directory: backend
-        run: ./mvnw clean package -DskipTests
-
-      - name: Prepare deployment package for Elastic Beanstalk
-        run: |
-          cp backend/target/*.jar app.jar
-          echo "web: java -jar app.jar --server.port=5000" > Procfile
-          zip backend-deploy.zip app.jar Procfile
-
-      - name: Debug secrets
-        run: |
-          echo "Key present: ${{ secrets.AWS_ACCESS_KEY_ID != '' }}"
-          echo "Secret present: ${{ secrets.AWS_SECRET_ACCESS_KEY != '' }}"
-      
-
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-north-1
-
-      - name: Install AWS CLI
-        run: |
-          pip install --upgrade pip
-          pip install awscli
-
-      - name: Upload deployment package to S3
-        run: |
-          aws s3 cp backend-deploy.zip s3://elasticbeanstalk-eu-north-1-${{ secrets.AWS_ACCOUNT_ID }}/backend-deploy-${{ github.run_number }}.zip
-
-      - name: Create new application version
-        run: |
-          aws elasticbeanstalk create-application-version \
-            --application-name ecommerce-backend \
-            --version-label github-${{ github.run_number }} \
-            --source-bundle S3Bucket=elasticbeanstalk-eu-north-1-${{ secrets.AWS_ACCOUNT_ID }},S3Key=backend-deploy-${{ github.run_number }}.zip
-
-      - name: Update environment to new version
-        run: |
-          aws elasticbeanstalk update-environment \
-            --environment-name ecommerce-backend-env \
-            --version-label github-${{ github.run_number }}
