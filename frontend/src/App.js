@@ -434,6 +434,33 @@ function App() {
     setSelectedProduct(null);
     setOrderPlaced(false);
     setOrders([]);
+    setCart([]);
+    setShowCheckoutForm(false);
+    setCheckoutAddresses(null);
+    setPage("home");
+    setProducts([]);
+    setSearch("");
+    setEmail("");
+    setPassword("");
+    setName("");
+    setGender("");
+    setMobile("");
+    setShowLogin(true);
+    setShowForgotPassword(false);
+    setForgotEmail("");
+    setForgotMessage("");
+    setRememberMe(false);
+    setSortBy("");
+    setSortOrder("asc");
+    setLoginError("");
+    setRegisterError("");
+    setFilterColor("All");
+    setFilterBrand("All");
+    setFilterRating("All");
+    setCategoryOptions(["All"]);
+    setBrandOptions(["All"]);
+    setColorOptions(["All"]);
+    setFilterCategory("All");
   };
 
   const handleProductClick = async (id) => {
